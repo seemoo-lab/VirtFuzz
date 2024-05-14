@@ -1,0 +1,47 @@
+[  270.813663] Bluetooth: hci0: unexpected subevent 0x01 length: 40 > 18\r\n
+[  270.817099] ------------[ cut here ]------------\r\n
+[  270.818408] refcount_t: underflow; use-after-free.\r\n
+[  270.819724] WARNING: CPU: 0 PID: 158 at lib/refcount.c:28 refcount_warn_saturate+0xa6/0xf0\r\n
+[  270.821901] Modules linked in:\r\n
+[  270.822757] CPU: 0 PID: 158 Comm: bluetoothd Not tainted 5.16.0-rc8+ #4\r\n
+[  270.824526] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014\r\n
+[  270.827486] RIP: 0010:refcount_warn_saturate+0xa6/0xf0\r\n
+[  270.828865] Code: 05 17 ab 7f 01 01 e8 59 af 92 00 0f 0b c3 80 3d 05 ab 7f 01 00 75 95 48 c7 c7 18 8b 7d 82 c6 05 f5 aa 7f 01 01 e8 3a af 92 00 <0f> 0b c3 80 3d e4 aa 7f 01 00 0f 85 72 ff ff ff 48 c7 c7 70 8b 7d\r\n
+[  270.833955] RSP: 0018:ffffc900005a7d00 EFLAGS: 00010286\r\n
+[  270.835339] RAX: 0000000000000000 RBX: ffff888005003588 RCX: 0000000000000000\r\n
+[  270.837203] RDX: 0000000000000001 RSI: ffffffff827a9189 RDI: 00000000ffffffff\r\n
+[  270.839100] RBP: 0000000000000000 R08: 0000000000000000 R09: ffffc900005a7b30\r\n
+[  270.840962] R10: ffffc900005a7b28 R11: ffffffff82b34de0 R12: ffff88800ded1100\r\n
+[  270.842838] R13: 0000000000000000 R14: ffff88800da5e000 R15: 0000000000000000\r\n
+[  270.844721] FS:  00007f38850ec840(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000\r\n
+[  270.846814] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\r\n
+[  270.848345] CR2: 00007f8e29d43fb8 CR3: 000000000d89c000 CR4: 00000000000006f0\r\n
+[  270.850265] Call Trace:\r\n
+[  270.850963]  <TASK>\r\n
+[  270.851553]  skb_release_data+0x100/0x150\r\n
+[  270.852694]  consume_skb+0x36/0x70\r\n
+[  270.853658]  skb_free_datagram+0xc/0x60\r\n
+[  270.854676]  hci_sock_recvmsg+0x270/0x500\r\n
+[  270.855801]  ? security_socket_recvmsg+0x31/0x50\r\n
+[  270.857056]  sock_read_iter+0x90/0xf0\r\n
+[  270.858051]  new_sync_read+0x188/0x1a0\r\n
+[  270.859095]  vfs_read+0x120/0x1c0\r\n
+[  270.860006]  ksys_read+0xae/0xe0\r\n
+[  270.860909]  ? syscall_trace_enter.constprop.0+0x183/0x250\r\n
+[  270.862403]  do_syscall_64+0x3b/0x90\r\n
+[  270.863346]  entry_SYSCALL_64_after_hwframe+0x44/0xae\r\n
+[  270.864716] RIP: 0033:0x7f3885983862\r\n
+[  270.865740] Code: c0 e9 b2 fe ff ff 50 48 8d 3d 5a 29 0a 00 e8 55 e4 01 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 48 89 54 24\r\n
+[  270.870495] RSP: 002b:00007ffd091b1938 EFLAGS: 00000246 ORIG_RAX: 0000000000000000\r\n
+[  270.872504] RAX: ffffffffffffffda RBX: 0000602000001af0 RCX: 00007f3885983862\r\n
+[  270.874409] RDX: 0000000000000200 RSI: 0000615000001480 RDI: 0000000000000008\r\n
+[  270.876296] RBP: 00007ffd091b2190 R08: 0000000000000000 R09: 00007f3885bfb3e0\r\n
+[  270.878170] R10: 0000603000000c70 R11: 0000000000000246 R12: 0000000000000000\r\n
+[  270.880048] R13: 0000615000001480 R14: 00007f3885b6e0e0 R15: 000060f000000040\r\n
+[  270.881868]  </TASK>\r\n
+[  270.882516] irq event stamp: 140239\r\n
+[  270.883472] hardirqs last  enabled at (140249): [<ffffffff810e13bd>] __up_console_sem+0x4d/0x50\r\n
+[  270.885766] hardirqs last disabled at (140258): [<ffffffff810e13a2>] __up_console_sem+0x32/0x50\r\n
+[  270.888040] softirqs last  enabled at (140062): [<ffffffff81076948>] irq_exit_rcu+0xd8/0x120\r\n
+[  270.890274] softirqs last disabled at (140053): [<ffffffff81076948>] irq_exit_rcu+0xd8/0x120\r\n
+[  270.892489] ---[ end trace d68430e3b5db6f94 ]---\r\n

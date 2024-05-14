@@ -1,0 +1,51 @@
+[  309.414956] BUG: spinlock cpu recursion on CPU#0, bluetoothd/151
+[  309.415758]  lock: 0xffff888008e9ffb8, .magic: dead4ead, .owner: <none>/-1, .owner_cpu: 0
+[  309.416857] CPU: 0 PID: 151 Comm: bluetoothd Not tainted 5.17.0-rc6-00116-g9797235a6909 #22
+[  309.417890] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014
+[  309.418990] Call Trace:
+[  309.419238]  <TASK>
+[  309.419454]  dump_stack_lvl+0x45/0x59
+[  309.419887]  dump_stack+0xc/0xd
+[  309.420225]  spin_bug.cold+0x34/0x55
+[  309.420585]  do_raw_spin_lock+0x144/0x180
+[  309.421018]  _raw_spin_lock_irqsave+0x41/0x50
+[  309.421499]  ? skb_queue_tail+0x20/0xa0
+[  309.421884]  skb_queue_tail+0x20/0xa0
+[  309.422279]  hci_send_acl+0x503/0x510
+[  309.422649]  ? __sanitizer_cov_trace_const_cmp4+0x1c/0x70
+[  309.423182]  l2cap_do_send+0x111/0x210
+[  309.423595]  l2cap_chan_send+0x230/0x19a0
+[  309.423994]  ? __mutex_lock+0x193/0xe70
+[  309.424379]  ? trace_hardirqs_on+0x26/0x120
+[  309.424808]  ? release_sock+0xbc/0xf0
+[  309.425174]  l2cap_sock_sendmsg+0x155/0x1c0
+[  309.425620]  ? l2cap_skb_msg_name+0x80/0x80
+[  309.426077]  sock_sendmsg+0x8e/0xa0
+[  309.426424]  sock_write_iter+0x12e/0x1c0
+[  309.426893]  do_iter_readv_writev+0x26e/0x320
+[  309.427324]  do_iter_write+0xd4/0x300
+[  309.427726]  ? import_iovec+0x58/0x70
+[  309.428093]  vfs_writev+0xed/0x380
+[  309.428449]  ? ktime_get_coarse_real_ts64+0x13f/0x150
+[  309.429023]  ? __this_cpu_preempt_check+0xf/0x10
+[  309.429527]  ? lockdep_hardirqs_on+0x79/0x100
+[  309.429954]  ? ktime_get_coarse_real_ts64+0x13f/0x150
+[  309.430488]  ? trace_hardirqs_on+0x26/0x120
+[  309.430904]  ? do_writev+0x176/0x1c0
+[  309.431257]  do_writev+0x176/0x1c0
+[  309.431617]  ? syscall_trace_enter.constprop.0+0x2a1/0x3e0
+[  309.432248]  __x64_sys_writev+0x3b/0x40
+[  309.432796]  do_syscall_64+0x36/0x80
+[  309.433135]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[  309.433712] RIP: 0033:0x7f2837ae5f77
+[  309.434111] Code: 0f 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b8 0f 1f 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 b8 14 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 51 c3 48 83 ec 28 89 54 24 1c 48 89 74 24 10
+[  309.435764] RSP: 002b:00007ffe5a4bf0f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000014
+[  309.436427] RAX: ffffffffffffffda RBX: 00007ffe5a4bf120 RCX: 00007f2837ae5f77
+[  309.437121] RDX: 0000000000000001 RSI: 00007ffe5a4bf120 RDI: 0000000000000038
+[  309.437803] RBP: 0000000000000038 R08: 0000000000000002 R09: 0000000000000001
+[  309.438457] R10: 00007ffe5a570080 R11: 0000000000000246 R12: 0000560bb1248f80
+[  309.439363] R13: 0000560bb1248ea0 R14: 0000560bb1249540 R15: 0000560bb11b0850
+[  309.440117]  </TASK>
+[  309.441336] bluetoothd[151]: src/device.c:load_gatt_db() Unable to load key file from /var/lib/bluetooth/00:1A:7D:DA:71:13/cache/EE:1E:00:00:96:96: (No such file or directory)
+[  309.442865] bluetoothd[151]: src/device.c:load_gatt_db() No cache for EE:1E:00:00:96:96
+[  309.443881] Bluetooth: hci0: link tx timeout

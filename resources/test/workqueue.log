@@ -1,0 +1,21 @@
+[  356.059264] BUG: workqueue lockup - pool cpus=0 node=0 flags=0x0 nice=-20 stuck for 53s!
+[  356.061933] Showing busy workqueues and worker pools:
+[  356.063619] workqueue events: flags=0x0
+[  356.064936]   pwq 0: cpus=0 node=0 flags=0x0 nice=0 active=1/256 refcnt=2
+[  356.064940]     pending: vmstat_shepherd
+[  356.064946] workqueue events_highpri: flags=0x10
+[  356.070166]   pwq 1: cpus=0 node=0 flags=0x0 nice=-20 active=1/256 refcnt=2
+[  356.070169]     pending: mix_interrupt_randomness
+[  356.070174] workqueue events_power_efficient: flags=0x80
+[  356.075881]   pwq 0: cpus=0 node=0 flags=0x0 nice=0 active=3/256 refcnt=4
+[  356.075884]     pending: gc_worker, neigh_managed_work, neigh_managed_work
+[  356.075892] workqueue events_freezable_power_: flags=0x84
+[  356.082297]   pwq 0: cpus=0 node=0 flags=0x0 nice=0 active=1/256 refcnt=2
+[  356.082301]     pending: disk_events_workfn
+[  356.082306] workqueue kblockd: flags=0x18
+[  356.087413]   pwq 1: cpus=0 node=0 flags=0x0 nice=-20 active=1/256 refcnt=2
+[  356.087416]     pending: blk_mq_timeout_work
+[  356.087422] workqueue vwlan0: flags=0xa0002
+[  356.092628]   pwq 2: cpus=0 flags=0x4 nice=0 active=1/1 refcnt=3
+[  356.092631]     in-flight: 8:ieee80211_scan_work
+[  356.092637] pool 2: cpus=0 flags=0x4 nice=0 hung=54s workers=6 idle: 170 39 41 173 21

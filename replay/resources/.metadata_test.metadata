@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "map": {
+      "15649094631884340296": [
+        15649094631884340296,
+        {
+          "kernel": "../../../bluetooth-next/bf909caec3902d174aea2ef3f4326e4715a56499/arch/x86/boot/bzImage",
+          "image": "../../guestimage/base.qcow2",
+          "device": {
+            "virtio_id": 40,
+            "virtqueue_num": 2,
+            "virtqueue_tx": 0,
+            "virtqueue_rx": 1,
+            "features": [
+              0,
+              1,
+              2
+            ],
+            "config": [
+              0,
+              0,
+              0,
+              0,
+              255,
+              0
+            ]
+          },
+          "initialization": null
+        }
+      ],
+      "16449114127035224317": [
+        16449114127035224317,
+        {
+          "log": [
+            "[  124.458162] ------------[ cut here ]------------\r\n",
+            "[  124.461442] WARNING: CPU: 0 PID: 42 at net/bluetooth/hci_conn.c:576 hci_conn_timeout+0x245/0x2a0\r\n",
+            "[  124.467397] Modules linked in:\r\n",
+            "[  124.469546] CPU: 0 PID: 42 Comm: kworker/u3:1 Not tainted 5.18.0-rc7-00849-g2f18b80b856f #2\r\n",
+            "[  124.475136] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014\r\n",
+            "[  124.483222] Workqueue: hci0 hci_conn_timeout\r\n",
+            "[  124.486255] RIP: 0010:hci_conn_timeout+0x245/0x2a0\r\n",
+            "[  124.489603] Code: 93 a0 02 00 00 48 c1 e8 03 80 3c 08 00 75 50 48 8b 35 57 84 ce 01 bf 40 00 00 00 e8 b5 c3 c0 fd e9 21 ff ff ff e8 cb 34 e5 fd <0f> 0b e9 2f fe ff ff 48 89 ef e8 4c b8 0f fe e9 f5 fd ff ff e8 22\r\n",
+            "[  124.502225] RSP: 0018:ffffc900004d7d00 EFLAGS: 00010293\r\n",
+            "[  124.505861] RAX: ffffffff8357d955 RBX: ffff8880079f2138 RCX: 0000000000000000\r\n",
+            "[  124.510747] RDX: ffff88800a811980 RSI: 0000000000000000 RDI: 0000000000000003\r\n",
+            "[  124.515601] RBP: 00000000ffffffff R08: 0000000000000000 R09: ffff8880079f2013\r\n",
+            "[  124.520414] R10: ffffffff8357d76d R11: 0000000000000001 R12: ffffc900004d7db8\r\n",
+            "[  124.525233] R13: ffff88800a74d200 R14: ffff8880079f2138 R15: ffff88800a687b00\r\n",
+            "[  124.530090] FS:  0000000000000000(0000) GS:ffff88806d000000(0000) knlGS:0000000000000000\r\n",
+            "[  124.535544] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\r\n",
+            "[  124.539590] CR2: 00007f8f98e12018 CR3: 000000000aaae000 CR4: 00000000000006f0\r\n",
+            "[  124.544537] Call Trace:\r\n",
+            "[  124.546297]  <TASK>\r\n",
+            "[  124.547816]  process_one_work+0x8df/0x1530\r\n",
+            "[  124.550657]  ? lock_release+0x6f0/0x6f0\r\n",
+            "[  124.553358]  ? pwq_dec_nr_in_flight+0x230/0x230\r\n",
+            "[  124.556445]  ? rwlock_bug.part.0+0x90/0x90\r\n",
+            "[  124.559223]  ? _raw_spin_lock_irq+0x41/0x50\r\n",
+            "[  124.562071]  worker_thread+0x575/0x1190\r\n",
+            "[  124.564714]  ? process_one_work+0x1530/0x1530\r\n",
+            "[  124.567799]  kthread+0x2a0/0x340\r\n",
+            "[  124.570083]  ? kthread_complete_and_exit+0x20/0x20\r\n",
+            "[  124.573461]  ret_from_fork+0x22/0x30\r\n",
+            "[  124.575987]  </TASK>\r\n",
+            "[  124.577541] irq event stamp: 51149\r\n",
+            "[  124.579908] hardirqs last  enabled at (51159): [<ffffffff8127134d>] __up_console_sem+0x4d/0x50\r\n",
+            "[  124.585614] hardirqs last disabled at (51168): [<ffffffff81271332>] __up_console_sem+0x32/0x50\r\n",
+            "[  124.591304] softirqs last  enabled at (50920): [<ffffffff811427a3>] __irq_exit_rcu+0x113/0x170\r\n",
+            "[  124.596968] softirqs last disabled at (51187): [<ffffffff811427a3>] __irq_exit_rcu+0x113/0x170\r\n",
+            "[  124.602720] ---[ end trace 0000000000000000 ]---\r\n"
+          ],
+          "crash_ident": "hci_conn_timeout+0x245-warning"
+        }
+      ],
+      "11012213471290652946": [
+        11012213471290652946,
+        {
+          "previous_frames": [
+            [
+              1,
+              2,
+              3,
+              4
+            ],
+            [
+              5,
+              6
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "exec_time": null,
+  "executions": 43784
+}

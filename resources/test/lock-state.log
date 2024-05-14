@@ -1,0 +1,136 @@
+[   19.768903] irq 11: nobody cared (try booting with the \"irqpoll\" option)
+[   19.769530] CPU: 0 PID: 155 Comm: NetworkManager Not tainted 6.0.0-rc1-13718-g41c406663813-dirty #16
+[   19.769530] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+[   19.769530] Call Trace:
+[   19.769530]  <IRQ>
+[   19.769530]  dump_stack_lvl+0x45/0x5d
+[   19.769530]  __report_bad_irq+0x30/0xa2
+[   19.769530]  note_interrupt.cold+0xb/0x61
+[   19.769530]  handle_irq_event+0x69/0x70
+[   19.769530]  handle_fasteoi_irq+0x8b/0x1e0
+[   19.769530]  __common_interrupt+0x6d/0x150
+[   19.769530]  common_interrupt+0x9f/0xc0
+[   19.769530]  </IRQ>
+[   19.769530]  <TASK>
+[   19.769530]  asm_common_interrupt+0x22/0x40
+[   19.769530] RIP: 0010:ktime_get_coarse_real_ts64+0xbb/0xc0
+[   19.769530] Code: 02 00 00 00 31 f6 48 c7 c7 08 f2 d5 82 e8 6d 8e fb ff 48 8b 74 24 10 48 c7 c7 08 f2 d5 82 e8 7c 8b fb ff e8 37 09 07 00 fb 5a <eb> 87 0f 1f 00 8b 0d b6 06 db 01 85 c9 0f 85 a8 00 00 00 9c 58 fa
+[   19.769530] RSP: 0018:ffffc900004c7f00 EFLAGS: 00000206
+[   19.769530] RAX: 00000000000172db RBX: ffff88800891d420 RCX: 0000000000000000
+[   19.769530] RDX: ffffffff8111588b RSI: ffffffff82aa4e89 RDI: ffffffff82a1b487
+[   19.769530] RBP: ffffc900004c7f58 R08: 0000000000000001 R09: 0000000000000001
+[   19.769530] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
+[   19.769530] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+[   19.769530]  ? syscall_trace_enter.constprop.0+0x16b/0x220
+[   19.769530]  syscall_trace_enter.constprop.0+0x16b/0x220
+[   19.769530]  do_syscall_64+0x16/0x90
+[   19.769530]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[   19.769530] RIP: 0033:0x7fabc718bbbc
+[   19.769530] 
+[   19.769530] ================================
+[   19.769530] WARNING: inconsistent lock state
+[   19.769530] 6.0.0-rc1-13718-g41c406663813-dirty #16 Not tainted
+[   19.769530] --------------------------------
+[   19.769530] inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
+[   19.769530] NetworkManager/155 [HC1[1]:SC0[0]:HE0:SE1] takes:
+[   19.769530] ffffffff82d85638 (vmap_area_lock){?.+.}-{2:2}, at: find_vmap_area+0x12/0x60
+[   19.769530] {HARDIRQ-ON-W} state was registered at:
+[   19.769530]   lock_acquire+0xca/0x2f0
+[   19.769530]   _raw_spin_lock+0x2a/0x40
+[   19.769530]   alloc_vmap_area+0x334/0x800
+[   19.769530]   __get_vm_area_node+0xb2/0x170
+[   19.769530]   get_vm_area_caller+0x35/0x50
+[   19.769530]   __ioremap_caller.constprop.0+0x122/0x2b0
+[   19.769530]   acpi_os_map_iomem+0x1bf/0x1e0
+[   19.769530]   acpi_tb_acquire_table+0x39/0x66
+[   19.769530]   acpi_tb_validate_table+0x1c/0x36
+[   19.769530]   acpi_tb_verify_temp_table+0x33/0x223
+[   19.769530]   acpi_reallocate_root_table+0xdc/0x111
+[   19.769530]   acpi_early_init+0x46/0xd9
+[   19.769530]   start_kernel+0x63e/0x70c
+[   19.769530]   secondary_startup_64_no_verify+0xe0/0xeb
+[   19.769530] irq event stamp: 94940
+[   19.769530] hardirqs last  enabled at (94939): [<ffffffff81126f69>] ktime_get_coarse_real_ts64+0xb9/0xc0
+[   19.769530] hardirqs last disabled at (94940): [<ffffffff820fc235>] common_interrupt+0x15/0xc0
+[   19.769530] softirqs last  enabled at (86616): [<ffffffff8107b8d5>] __irq_exit_rcu+0xc5/0x120
+[   19.769530] softirqs last disabled at (86609): [<ffffffff8107b8d5>] __irq_exit_rcu+0xc5/0x120
+[   19.769530] 
+[   19.769530] other info that might help us debug this:
+[   19.769530]  Possible unsafe locking scenario:
+[   19.769530] 
+[   19.769530]        CPU0
+[   19.769530]        ----
+[   19.769530]   lock(vmap_area_lock);
+[   19.769530]   <Interrupt>
+[   19.769530]     lock(vmap_area_lock);
+[   19.769530] 
+[   19.769530]  *** DEADLOCK ***
+[   19.769530] 
+[   19.769530] no locks held by NetworkManager/155.
+[   19.769530] 
+[   19.769530] stack backtrace:
+[   19.769530] CPU: 0 PID: 155 Comm: NetworkManager Not tainted 6.0.0-rc1-13718-g41c406663813-dirty #16
+[   19.769530] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+[   19.769530] Call Trace:
+[   19.769530]  <IRQ>
+[   19.769530]  dump_stack_lvl+0x45/0x5d
+[   19.769530]  mark_lock.part.0.cold+0xb6/0xd7
+[   19.769530]  ? __lock_acquire+0x392/0x2350
+[   19.769530]  __lock_acquire+0x914/0x2350
+[   19.769530]  lock_acquire+0xca/0x2f0
+[   19.769530]  ? find_vmap_area+0x12/0x60
+[   19.769530]  _raw_spin_lock+0x2a/0x40
+[   19.769530]  ? find_vmap_area+0x12/0x60
+[   19.769530]  find_vmap_area+0x12/0x60
+[   19.769530]  __check_object_size+0x135/0x250
+[   19.769530]  copy_from_user_nmi+0x5c/0x80
+[   19.769530]  show_opcodes+0x59/0xc0
+[   19.769530]  show_iret_regs+0xd/0x33
+[   19.769530]  __show_regs+0x1e/0x40
+[   19.769530]  ? unwind_next_frame+0x4af/0x790
+[   19.769530]  show_trace_log_lvl+0x265/0x2bf
+[   19.769530]  ? entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[   19.769530]  dump_stack_lvl+0x45/0x5d
+[   19.769530]  __report_bad_irq+0x30/0xa2
+[   19.769530]  note_interrupt.cold+0xb/0x61
+[   19.769530]  handle_irq_event+0x69/0x70
+[   19.769530]  handle_fasteoi_irq+0x8b/0x1e0
+[   19.769530]  __common_interrupt+0x6d/0x150
+[   19.769530]  common_interrupt+0x9f/0xc0
+[   19.769530]  </IRQ>
+[   19.769530]  <TASK>
+[   19.769530]  asm_common_interrupt+0x22/0x40
+[   19.769530] RIP: 0010:ktime_get_coarse_real_ts64+0xbb/0xc0
+[   19.769530] Code: 02 00 00 00 31 f6 48 c7 c7 08 f2 d5 82 e8 6d 8e fb ff 48 8b 74 24 10 48 c7 c7 08 f2 d5 82 e8 7c 8b fb ff e8 37 09 07 00 fb 5a <eb> 87 0f 1f 00 8b 0d b6 06 db 01 85 c9 0f 85 a8 00 00 00 9c 58 fa
+[   19.769530] RSP: 0018:ffffc900004c7f00 EFLAGS: 00000206
+[   19.769530] RAX: 00000000000172db RBX: ffff88800891d420 RCX: 0000000000000000
+[   19.769530] RDX: ffffffff8111588b RSI: ffffffff82aa4e89 RDI: ffffffff82a1b487
+[   19.769530] RBP: ffffc900004c7f58 R08: 0000000000000001 R09: 0000000000000001
+[   19.769530] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000000
+[   19.769530] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+[   19.769530]  ? syscall_trace_enter.constprop.0+0x16b/0x220
+[   19.769530]  syscall_trace_enter.constprop.0+0x16b/0x220
+[   19.769530]  do_syscall_64+0x16/0x90
+[   19.769530]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[   19.769530] RIP: 0033:0x7fabc718bbbc
+[   19.769530] Code: ec 28 48 89 54 24 18 48 89 74 24 10 89 7c 24 08 e8 19 6e f8 ff 48 8b 54 24 18 48 8b 74 24 10 41 89 c0 8b 7c 24 08 31 c0 0f 05 <48> 3d 00 f0 ff ff 77 34 44 89 c7 48 89 44 24 08 e8 6f 6e f8 ff 48
+[   19.769530] RSP: 002b:00007ffea6edc800 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[   19.769530] RAX: ffffffffffffffda RBX: 000055de260efaf0 RCX: 00007fabc718bbbc
+[   19.769530] RDX: 0000000000000010 RSI: 00007ffea6edc8a0 RDI: 0000000000000003
+[   19.769530] RBP: 000055de261bce60 R08: 0000000000000000 R09: 00007ffea6fe2080
+[   19.769530] R10: 00007ffea6fe2090 R11: 0000000000000246 R12: 0000000000000007
+[   19.769530] R13: 0000000000000000 R14: 000000007fffffff R15: 000055de260c6f00
+[   19.769530]  </TASK>
+[   19.769530] Code: ec 28 48 89 54 24 18 48 89 74 24 10 89 7c 24 08 e8 19 6e f8 ff 48 8b 54 24 18 48 8b 74 24 10 41 89 c0 8b 7c 24 08 31 c0 0f 05 <48> 3d 00 f0 ff ff 77 34 44 89 c7 48 89 44 24 08 e8 6f 6e f8 ff 48
+[   19.769530] RSP: 002b:00007ffea6edc800 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[   19.769530] RAX: ffffffffffffffda RBX: 000055de260efaf0 RCX: 00007fabc718bbbc
+[   19.769530] RDX: 0000000000000010 RSI: 00007ffea6edc8a0 RDI: 0000000000000003
+[   19.769530] RBP: 000055de261bce60 R08: 0000000000000000 R09: 00007ffea6fe2080
+[   19.769530] R10: 00007ffea6fe2090 R11: 0000000000000246 R12: 0000000000000007
+[   19.769530] R13: 0000000000000000 R14: 000000007fffffff R15: 000055de260c6f00
+[   19.769530]  </TASK>
+[   19.769530] handlers:
+[   19.769530] [<0000000074391ff6>] vp_interrupt
+[   19.769530] Disabling IRQ #11
+[   20.003082] netlink: 28 bytes leftover after parsing attributes in process `kworker/0:3'.
+[   20.005848] hwsim: genlmsg_parse returned -22

@@ -1,0 +1,3 @@
+[  336.482702] Bluetooth: hci0: failed to register connection device\r\n
+[  337.725296] Bluetooth: hci0: Received unexpected HCI Event 00000000\r\n
+[   29.292606]  ? rwlock_bug.part.0+0x90/0x90\r\n

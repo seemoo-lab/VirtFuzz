@@ -1,0 +1,33 @@
+From c709070b6295a8071dfbbfe4c4ee0deede01856b Mon Sep 17 00:00:00 2001
+From: Soenke Huster <shuster@seemoo.tu-darmstadt.de>
+Date: Tue, 14 May 2024 13:40:57 +0000
+Subject: [PATCH] Add function definitions in header
+
+---
+ include/linux/kcov.h | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/include/linux/kcov.h b/include/linux/kcov.h
+index b851ba415e03..e9912b6ab4d0 100644
+--- a/include/linux/kcov.h
++++ b/include/linux/kcov.h
+@@ -89,6 +89,16 @@ void __sanitizer_cov_trace_const_cmp4(u32 arg1, u32 arg2);
+ void __sanitizer_cov_trace_const_cmp8(kcov_u64 arg1, kcov_u64 arg2);
+ void __sanitizer_cov_trace_switch(kcov_u64 val, void *cases);
+ 
++void notrace kcov_rewind(unsigned long *area);
++void kcov_noop(void);
++void kcov_ivshmem_write_barrier(struct task_struct *t, unsigned long delimiter);
++void inner_kcov_ivshmem_start(int write_barrier);
++void kcov_ivshmem_start(void);
++void kcov_ivshmem_start_nobarrier(void);
++void inner_kcov_ivshmem_stop(int write_barrier);
++void kcov_ivshmem_stop_nobarrier(void);
++void kcov_ivshmem_stop(void);
++
+ #else
+ 
+ static inline void kcov_task_init(struct task_struct *t) {}
+-- 
+2.34.1
+

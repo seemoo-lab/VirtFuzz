@@ -1,0 +1,85 @@
+From 833fa9cc05b9376f36f3c6fee5c3bcf8aae45e58 Mon Sep 17 00:00:00 2001
+From: Soenke Huster <shuster@seemoo.tu-darmstadt.de>
+Date: Mon, 11 Jul 2022 15:17:08 +0200
+Subject: [PATCH] Instrument virtio-bt with kcov_ivshmem
+
+---
+ drivers/bluetooth/virtio_bt.c |  3 +++
+ net/bluetooth/hci_core.c      | 12 +++++++++---
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/bluetooth/virtio_bt.c b/drivers/bluetooth/virtio_bt.c
+index 67c21263f9e0..1ebca68c5819 100644
+--- a/drivers/bluetooth/virtio_bt.c
++++ b/drivers/bluetooth/virtio_bt.c
+@@ -187,6 +187,8 @@ static int virtbt_shutdown_generic(struct hci_dev *hdev)
+ 	return 0;
+ }
+ 
++extern void kcov_noop(void);
++
+ static void virtbt_rx_handle(struct virtio_bluetooth *vbt, struct sk_buff *skb)
+ {
+ 	__u8 pkt_type;
+@@ -203,6 +205,7 @@ static void virtbt_rx_handle(struct virtio_bluetooth *vbt, struct sk_buff *skb)
+ 		hci_recv_frame(vbt->hdev, skb);
+ 		break;
+ 	default:
++		kcov_noop();
+ 		kfree_skb(skb);
+ 		break;
+ 	}
+diff --git a/net/bluetooth/hci_core.c b/net/bluetooth/hci_core.c
+index b3a5a3cc9372..4d74dad6a41b 100644
+--- a/net/bluetooth/hci_core.c
++++ b/net/bluetooth/hci_core.c
+@@ -3954,6 +3954,9 @@ void hci_req_cmd_complete(struct hci_dev *hdev, u16 opcode, u8 status,
+ 	spin_unlock_irqrestore(&hdev->cmd_q.lock, flags);
+ }
+ 
++extern void kcov_ivshmem_start(void);
++extern void kcov_ivshmem_stop(void);
++
+ static void hci_rx_work(struct work_struct *work)
+ {
+ 	struct hci_dev *hdev = container_of(work, struct hci_dev, rx_work);
+@@ -3968,7 +3971,7 @@ static void hci_rx_work(struct work_struct *work)
+ 	 */
+ 	for (; (skb = skb_dequeue(&hdev->rx_q)); kcov_remote_stop()) {
+ 		kcov_remote_start_common(skb_get_kcov_handle(skb));
+-
++		kcov_ivshmem_start();
+ 		/* Send copy to monitor */
+ 		hci_send_to_monitor(hdev, skb);
+ 
+@@ -3986,7 +3989,7 @@ static void hci_rx_work(struct work_struct *work)
+ 		if (hci_dev_test_flag(hdev, HCI_USER_CHANNEL) &&
+ 		    !test_bit(HCI_INIT, &hdev->flags)) {
+ 			kfree_skb(skb);
+-			continue;
++			goto continue_loop;
+ 		}
+ 
+ 		if (test_bit(HCI_INIT, &hdev->flags)) {
+@@ -3996,7 +3999,7 @@ static void hci_rx_work(struct work_struct *work)
+ 			case HCI_SCODATA_PKT:
+ 			case HCI_ISODATA_PKT:
+ 				kfree_skb(skb);
+-				continue;
++				goto continue_loop;
+ 			}
+ 		}
+ 
+@@ -4026,6 +4029,9 @@ static void hci_rx_work(struct work_struct *work)
+ 			kfree_skb(skb);
+ 			break;
+ 		}
++
++	continue_loop:
++		kcov_ivshmem_stop();
+ 	}
+ }
+ 
+-- 
+2.37.1
+

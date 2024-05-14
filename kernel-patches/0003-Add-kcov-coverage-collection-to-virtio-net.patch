@@ -1,0 +1,52 @@
+From 9cfba7b57cc428271aba9332706dac149ae3a8e0 Mon Sep 17 00:00:00 2001
+From: Soenke Huster <shuster@seemoo.tu-darmstadt.de>
+Date: Mon, 11 Jul 2022 15:08:54 +0200
+Subject: [PATCH 3/7] Add kcov coverage collection to virtio-net
+
+---
+ drivers/net/virtio_net.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
+index db05b5e930be..a208d5cc174b 100644
+--- a/drivers/net/virtio_net.c
++++ b/drivers/net/virtio_net.c
+@@ -23,6 +23,7 @@
+ #include <net/xdp.h>
+ #include <net/net_failover.h>
+ 
++
+ static int napi_weight = NAPI_POLL_WEIGHT;
+ module_param(napi_weight, int, 0444);
+ 
+@@ -1501,6 +1502,9 @@ static void refill_work(struct work_struct *work)
+ 	}
+ }
+ 
++extern void kcov_ivshmem_start(void);
++extern void kcov_ivshmem_stop(void);
++
+ static int virtnet_receive(struct receive_queue *rq, int budget,
+ 			   unsigned int *xdp_xmit)
+ {
+@@ -1515,13 +1519,17 @@ static int virtnet_receive(struct receive_queue *rq, int budget,
+ 
+ 		while (stats.packets < budget &&
+ 		       (buf = virtqueue_get_buf_ctx(rq->vq, &len, &ctx))) {
++			kcov_ivshmem_start();
+ 			receive_buf(vi, rq, buf, len, ctx, xdp_xmit, &stats);
++			kcov_ivshmem_stop();
+ 			stats.packets++;
+ 		}
+ 	} else {
+ 		while (stats.packets < budget &&
+ 		       (buf = virtqueue_get_buf(rq->vq, &len)) != NULL) {
++			kcov_ivshmem_start();
+ 			receive_buf(vi, rq, buf, len, NULL, xdp_xmit, &stats);
++			kcov_ivshmem_stop();
+ 			stats.packets++;
+ 		}
+ 	}
+-- 
+2.37.1
+

@@ -1,0 +1,22 @@
+[package]
+name = "virtfuzz-proxy"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "3.2.1", features = ["derive", "env"] }
+virtfuzz = {path = ".."}
+log = "0.4.17"
+simplelog = "0.12.0"
+clap-verbosity-flag = "1.0.1"
+socket2 =  { version = "0.4.4", features = ["all"]}
+nix = { version = "0.24.2", features = ["ioctl", "net"]}
+netlink-packet-generic = "0.3.1"
+netlink-packet-core = "0.4.2"
+netlink-packet-utils = "0.5.1"
+byteorder = "1.4.3"
+anyhow = "1.0.62"
+radiotap = "1.3.0"
+libwifi = "0.3.1"

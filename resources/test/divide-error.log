@@ -1,0 +1,80 @@
+[  182.099967] Bluetooth: hci0: unexpected event 0x16 length: 56 > 6
+[  182.139970] Bluetooth: hci0: unexpected event 0x16 length: 50 > 6
+[  182.153273] Bluetooth: hci0: unexpected event 0x16 length: 46 > 6
+[  182.166652] Bluetooth: hci0: unexpected event 0x16 length: 167 > 6
+[  182.179974] Bluetooth: hci0: unexpected event 0x16 length: 145 > 6
+[  182.193267] Bluetooth: hci0: unexpected event 0x16 length: 37 > 6
+[  182.206604] Bluetooth: hci0: unexpected event 0x16 length: 319 > 6
+[  182.219968] Bluetooth: hci0: unexpected event 0x2c length: 49 > 17
+[  182.233312] Bluetooth: hci0: unexpected event 0x2c length: 47 > 17
+[  182.249947] Bluetooth: hci0: Received unexpected HCI Event 0x00
+[  182.263278] Bluetooth: hci0: unexpected event 0x2c length: 60 > 17
+[  182.289967] Bluetooth: hci0: unexpected event 0x07 length: 50 < 255
+[  182.306632] Bluetooth: hci0: unexpected event 0x2c length: 52 > 17
+[  182.307584] debugfs: Directory '1028' with parent 'hci0' already present!
+[  182.308606] sysfs: cannot create duplicate filename '/devices/virtual/bluetooth/hci0/hci0:1028'
+[  182.309816] CPU: 0 PID: 42 Comm: kworker/u3:1 Not tainted 5.16.0-rc8+ #4
+[  182.310573] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014
+[  182.312125] Workqueue: hci0 hci_rx_work
+[  182.312669] Call Trace:
+[  182.313023]  <TASK>
+[  182.313367]  dump_stack_lvl+0x45/0x59
+[  182.313923]  sysfs_warn_dup.cold+0x17/0x24
+[  182.314655]  sysfs_create_dir_ns+0xb1/0xd0
+[  182.315381]  kobject_add_internal+0xa6/0x290
+[  182.316130]  kobject_add+0x7e/0xb0
+[  182.316702]  ? __raw_spin_lock_init+0x36/0x60
+[  182.317465]  device_add+0x10a/0x910
+[  182.318087]  ? dev_set_name+0x4e/0x70
+[  182.318715]  hci_conn_add_sysfs+0x41/0x90
+[  182.319351]  hci_sync_conn_complete_evt+0x25e/0x310
+[  182.320000]  hci_event_packet+0x458/0x740
+[  182.320465]  ? hci_cc_pin_code_reply+0xd0/0xd0
+[  182.320998]  hci_rx_work+0x303/0x7f0
+[  182.321411]  ? lock_is_held_type+0xd7/0x130
+[  182.321909]  process_one_work+0x2a9/0x5e0
+[  182.322374]  worker_thread+0x4d/0x3f0
+[  182.322796]  ? process_one_work+0x5e0/0x5e0
+[  182.323338]  kthread+0x171/0x1a0
+[  182.323713]  ? set_kthread_struct+0x40/0x40
+[  182.324199]  ret_from_fork+0x22/0x30
+[  182.324616]  </TASK>
+[  182.324918] kobject_add_internal failed for hci0:1028 with -EEXIST, don't try to register things with the same name in the same d.
+[  182.326350] Bluetooth: hci0: failed to register connection device
+[  182.327265] divide error: 0000 [#1] PREEMPT SMP NOPTI
+[  182.327848] CPU: 0 PID: 42 Comm: kworker/u3:1 Not tainted 5.16.0-rc8+ #4
+[  182.328608] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014
+[  182.329901] Workqueue: hci0 hci_tx_work
+[  182.330349] RIP: 0010:hci_tx_work+0x258/0x870
+[  182.330841] Code: ff 45 39 e7 0f 87 bc 00 00 00 e8 33 fa 57 ff 4c 89 f7 e8 bb fc df ff 0f b7 8b 28 fa ff ff 31 d2 49 89 c4 8b 40 f
+[  182.332930] RSP: 0018:ffffc90000397e00 EFLAGS: 00010246
+[  182.333650] RAX: 0000000000000009 RBX: ffff888004b84ca8 RCX: 0000000000000000
+[  182.334450] RDX: 0000000000000000 RSI: ffffffff8285f2fa RDI: 00000000ffffffff
+[  182.335241] RBP: ffff88800c09e880 R08: 0000000000000001 R09: 0000000000000001
+[  182.336045] R10: 0000000000000000 R11: 0000000000000001 R12: ffff88800c147f00
+[  182.336860] R13: ffff888004b84000 R14: ffff88800c09e8a0 R15: 0000000000000007
+[  182.337660] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
+[  182.338570] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  182.339210] CR2: 00007f8c87efb800 CR3: 00000000073f6000 CR4: 00000000000006f0
+[  182.340022] Call Trace:
+[  182.340305]  <TASK>
+[  182.340553]  process_one_work+0x2a9/0x5e0
+[  182.341007]  worker_thread+0x4d/0x3f0
+[  182.341427]  ? process_one_work+0x5e0/0x5e0
+[  182.341896]  kthread+0x171/0x1a0
+[  182.342260]  ? set_kthread_struct+0x40/0x40
+[  182.342737]  ret_from_fork+0x22/0x30
+[  182.343165]  </TASK>
+[  182.343427] Modules linked in:
+[  182.343807] ---[ end trace dfd9229070e0a77a ]---
+[  182.344340] RIP: 0010:hci_tx_work+0x258/0x870
+[  182.344846] Code: ff 45 39 e7 0f 87 bc 00 00 00 e8 33 fa 57 ff 4c 89 f7 e8 bb fc df ff 0f b7 8b 28 fa ff ff 31 d2 49 89 c4 8b 40 f
+[  182.348018] RSP: 0018:ffffc90000397e00 EFLAGS: 00010246
+[  182.348862] RAX: 0000000000000009 RBX: ffff888004b84ca8 RCX: 0000000000000000
+[  182.350038] RDX: 0000000000000000 RSI: ffffffff8285f2fa RDI: 00000000ffffffff
+[  182.351189] RBP: ffff88800c09e880 R08: 0000000000000001 R09: 0000000000000001
+[  182.352338] R10: 0000000000000000 R11: 0000000000000001 R12: ffff88800c147f00
+[  182.353507] R13: ffff888004b84000 R14: ffff88800c09e8a0 R15: 0000000000000007
+[  182.354652] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
+[  182.355945] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  182.356883] CR2: 00007f8c87efb800 CR3: 00000000073f6000 CR4: 00000000000006f0

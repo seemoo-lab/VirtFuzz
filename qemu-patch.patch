@@ -1,0 +1,499 @@
+From 61750c69a1703cbcbc3a1954bf4d05eb64bebfe6 Mon Sep 17 00:00:00 2001
+From: Soenke Huster <shuster@seemoo.tu-darmstadt.de>
+Date: Wed, 6 Jul 2022 15:41:30 +0200
+Subject: [PATCH] Add VirtIO-General device
+
+Usage: -device virtio-general-pci,device-id=<VIRTIO_ID>,socket-path=<SOCK>,disable-legacy=on,tx-queue=<VIRTQUEUE_TX_ID>,rx-queue=<VIRTQUEUE_RX_ID>,num-virtqueues=<VIRTQUEUE_NUM>,config-path=<BINARY_VIRT_CONFIG>
+
+with:	<VIRTIO_ID> VirtIO device id, e.g. 1 for network
+	<SOCK>	Path to a SOCK_SEQPACKET socket that accepts a
+connection
+	<VIRTQUEUE_TX_ID> Queue that is used to transmit data, e.g. 1
+for network
+	<VIRTQUEUE_RX_ID> QUeue that is used to receive data, e.g. 0 for
+network
+	<VIRTQUEUE_NUM> Total number of virtqueues that should be
+created
+	<BINARY_VIRT_CONFIG> Binary file that is used for the device
+configuration, e.g., struct virtio_net_config
+
+The TX and RX queues are then connected to the socket
+---
+ hw/virtio/Kconfig                  |   6 +
+ hw/virtio/meson.build              |   2 +
+ hw/virtio/virtio-general-pci.c     |  88 +++++++++
+ hw/virtio/virtio-general.c         | 287 +++++++++++++++++++++++++++++
+ include/hw/virtio/virtio-general.h |  38 ++++
+ 5 files changed, 421 insertions(+)
+ create mode 100644 hw/virtio/virtio-general-pci.c
+ create mode 100644 hw/virtio/virtio-general.c
+ create mode 100644 include/hw/virtio/virtio-general.h
+
+diff --git a/hw/virtio/Kconfig b/hw/virtio/Kconfig
+index 92c9cf6c96..288e954e68 100644
+--- a/hw/virtio/Kconfig
++++ b/hw/virtio/Kconfig
+@@ -105,3 +105,9 @@ config VHOST_USER_SCMI
+     bool
+     default y
+     depends on VIRTIO && VHOST_USER
++
++config VIRTIO_GENERAL
++    bool
++    default y
++    depends on VIRTIO
++    depends on LINUX
+diff --git a/hw/virtio/meson.build b/hw/virtio/meson.build
+index c0055a7832..2649dc4c43 100644
+--- a/hw/virtio/meson.build
++++ b/hw/virtio/meson.build
+@@ -41,6 +41,7 @@ specific_virtio_ss.add(when: 'CONFIG_VHOST_USER_GPIO', if_true: files('vhost-use
+ specific_virtio_ss.add(when: ['CONFIG_VIRTIO_PCI', 'CONFIG_VHOST_USER_GPIO'], if_true: files('vhost-user-gpio-pci.c'))
+ specific_virtio_ss.add(when: 'CONFIG_VHOST_USER_SCMI', if_true: files('vhost-user-scmi.c'))
+ specific_virtio_ss.add(when: ['CONFIG_VIRTIO_PCI', 'CONFIG_VHOST_USER_SCMI'], if_true: files('vhost-user-scmi-pci.c'))
++specific_virtio_ss.add(when: 'CONFIG_VIRTIO_GENERAL', if_true: files('virtio-general.c'))
+ 
+ virtio_pci_ss = ss.source_set()
+ virtio_pci_ss.add(when: 'CONFIG_VHOST_VSOCK', if_true: files('vhost-vsock-pci.c'))
+@@ -68,6 +69,7 @@ virtio_pci_ss.add(when: 'CONFIG_VIRTIO_IOMMU', if_true: files('virtio-iommu-pci.
+ virtio_pci_ss.add(when: 'CONFIG_VIRTIO_MEM', if_true: files('virtio-mem-pci.c'))
+ virtio_pci_ss.add(when: 'CONFIG_VHOST_VDPA_DEV', if_true: files('vdpa-dev-pci.c'))
+ virtio_pci_ss.add(when: 'CONFIG_VIRTIO_MD', if_true: files('virtio-md-pci.c'))
++virtio_pci_ss.add(when: 'CONFIG_VIRTIO_GENERAL', if_true: files('virtio-general-pci.c'))
+ 
+ specific_virtio_ss.add_all(when: 'CONFIG_VIRTIO_PCI', if_true: virtio_pci_ss)
+ 
+diff --git a/hw/virtio/virtio-general-pci.c b/hw/virtio/virtio-general-pci.c
+new file mode 100644
+index 0000000000..4175d4fafa
+--- /dev/null
++++ b/hw/virtio/virtio-general-pci.c
+@@ -0,0 +1,88 @@
++/*
++ * Virtio bt PCI Bindings
++ *
++ * Copyright 2012 Red Hat, Inc.
++ * Copyright 2012 Amit Shah <amit.shah@redhat.com>
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * (at your option) any later version.  See the COPYING file in the
++ * top-level directory.
++ */
++
++#include "qemu/osdep.h"
++#include "hw/virtio/virtio-pci.h"
++#include "hw/virtio/virtio-general.h"
++#include "qapi/error.h"
++#include "qemu/module.h"
++#include "qom/object.h"
++
++typedef struct VirtIOGeneralPCI VirtIOGeneralPCI;
++
++/*
++ * virtio-bt-pci: This extends VirtioPCIProxy.
++ */
++#define TYPE_VIRTIO_GENERAL_PCI "virtio-general-pci-base"
++DECLARE_INSTANCE_CHECKER(VirtIOGeneralPCI, VIRTIO_GENERAL_PCI,
++TYPE_VIRTIO_GENERAL_PCI)
++
++struct VirtIOGeneralPCI {
++    VirtIOPCIProxy parent_obj;
++    VirtIOGeneral vdev;
++};
++
++static void virtio_general_pci_realize(VirtIOPCIProxy *vpci_dev, Error **errp)
++{
++    VirtIOGeneralPCI *vgen = VIRTIO_GENERAL_PCI(vpci_dev);
++    DeviceState *vdev = DEVICE(&vgen->vdev);
++
++    if (!qdev_realize(vdev, BUS(&vpci_dev->bus), errp)) {
++        return;
++    }
++}
++
++static Property general_properties[] = {
++        DEFINE_PROP_STRING("config-path", VirtIOGeneralPCI, vdev.config_path),
++        DEFINE_PROP_STRING("socket-path", VirtIOGeneralPCI, vdev.socket_path),
++        DEFINE_PROP_UINT16("device-id", VirtIOGeneralPCI, vdev.device_id, 0),
++        DEFINE_PROP_UINT16("num-virtqueues", VirtIOGeneralPCI, vdev.num_vqs, 0),
++        DEFINE_PROP_INT32("rx-queue", VirtIOGeneralPCI, vdev.vq_rx_id, -1),
++        DEFINE_PROP_INT32("tx-queue", VirtIOGeneralPCI, vdev.vq_tx_id, -1),
++        DEFINE_PROP_ARRAY("features", VirtIOGeneralPCI, vdev.feature_num, vdev.features, qdev_prop_uint16, uint16_t),
++        DEFINE_PROP_END_OF_LIST(),
++};
++
++static void virtio_general_pci_class_init(ObjectClass *klass, void *data)
++{
++    DeviceClass *dc = DEVICE_CLASS(klass);
++    VirtioPCIClass *k = VIRTIO_PCI_CLASS(klass);
++
++    device_class_set_props(dc, general_properties);
++
++    k->realize = virtio_general_pci_realize;
++    set_bit(DEVICE_CATEGORY_MISC, dc->categories);
++}
++
++static void virtio_general_initfn(Object *obj)
++{
++    VirtIOGeneralPCI *dev = VIRTIO_GENERAL_PCI(obj);
++
++    virtio_instance_init_common(obj, &dev->vdev, sizeof(dev->vdev),
++                                TYPE_VIRTIO_GENERAL);
++}
++
++static const VirtioPCIDeviceTypeInfo virtio_general_pci_info = {
++        .base_name             = TYPE_VIRTIO_GENERAL_PCI,
++        .generic_name          = "virtio-general-pci",
++        .transitional_name     = "virtio-general-pci-transitional",
++        .non_transitional_name = "virtio-general-pci-non-transitional",
++        .instance_size = sizeof(VirtIOGeneralPCI),
++        .instance_init = virtio_general_initfn,
++        .class_init    = virtio_general_pci_class_init,
++};
++
++static void virtio_bt_pci_register(void)
++{
++    virtio_pci_types_register(&virtio_general_pci_info);
++}
++
++type_init(virtio_bt_pci_register)
+diff --git a/hw/virtio/virtio-general.c b/hw/virtio/virtio-general.c
+new file mode 100644
+index 0000000000..e7391305bb
+--- /dev/null
++++ b/hw/virtio/virtio-general.c
+@@ -0,0 +1,287 @@
++/*
++ * A virtio device bt.
++ *
++ * Copyright 2019 Red Hat, Inc.
++ * Copyright 2019 Yoni Bettan <ybettan@redhat.com>
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * (at your option) any later version.  See the COPYING file in the
++ * top-level directory.
++ */
++
++#include "qemu/osdep.h"
++#include "qemu/iov.h"
++#include "include/qemu/error-report.h"
++#include "include/qemu/thread.h"
++#include "hw/virtio/virtio.h"
++#include "hw/virtio/virtio-general.h"
++#include "hw/virtio/virtio-access.h"
++#include "standard-headers/linux/virtio_ids.h"
++#include "qapi/error.h"
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <errno.h>
++
++static void handle_nop(VirtIODevice *vdev, VirtQueue *vq)
++{
++}
++
++static void handle_tx(VirtIODevice *vdev, VirtQueue *vq)
++{
++    VirtQueueElement *elem;
++    VirtIOGeneral *vgen = VIRTIO_GENERAL(vdev);
++    int size, ret;
++    char* data;
++
++    /*
++     * get the virtqueue element sent from the driver.
++     * in_sg are the driver inputs (device outputs)
++     * out_sg are the driver output (device input) */
++    elem = virtqueue_pop(vq, sizeof(VirtQueueElement));
++    size = iov_size(elem->out_sg, elem->out_num);
++
++    if (size <= 0) {
++        error_report("TXQueue: Empty VirtQueueElement");
++        return;
++    }
++
++    data = malloc(size);
++
++    /* read the driver output sg (device input sg) into a buffer */
++    iov_to_buf(elem->out_sg, elem->out_num, 0, data, size);
++
++    /* Send frame to socket */
++    ret = send(vgen->socket_fd, data, size, MSG_EOR);
++    if (ret < 0) {
++        perror("Error sending to socket: ");
++        return;
++    }
++    if (ret != size) {
++        error_report("Wrote just %d bytes.", ret);
++        return;
++    }
++
++    /* VirtIO Spec: 2.5 Virtqueues
++     * Device executes the requests and - when complete - adds a used buffer to the queue -
++     * i.e. lets the driver know by marking the buffer as used. Device can then trigger a
++     * device event - i.e. send a used buffer notification to the driver. */
++    virtqueue_push(vq, elem, 0);
++    g_free(elem);
++    virtio_notify(vdev, vq);
++
++    return;
++}
++
++static void * handle_socket(void *args) {
++    int msg_len, ret;
++    char buffer[VIRTIO_MAX_BUFFER_SIZE];
++    VirtQueueElement *elem;
++    VirtIOGeneral *vgen = args;
++
++    for(;;) {
++        memset(buffer, 0, VIRTIO_MAX_BUFFER_SIZE);
++        msg_len = recv(vgen->socket_fd, &buffer, VIRTIO_MAX_BUFFER_SIZE, MSG_TRUNC);
++        if (msg_len < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
++            continue;
++        }
++
++        if (msg_len < 0) {
++            perror("Could not receive data from proxy");
++            return NULL;
++        }
++
++        if (msg_len == 0) {
++            error_report("Proxy closed connection");
++            return NULL;
++        }
++
++        /* Send to driver */
++        /* Wait for the lock, which is unlocked if a new writable buffer is added by the driver */
++        while (!(elem = virtqueue_pop(vgen->rx_queue, sizeof(VirtQueueElement)))) {
++            usleep(1000);
++        }
++
++        ret = iov_from_buf(elem->in_sg, elem->in_num, 0, buffer, msg_len);
++        if (ret < msg_len) {
++            error_report("Size mismatch: Message of %d bytes trimmed to %d bytes to fit in virtqueue", msg_len, ret);
++        }
++        virtqueue_push(vgen->rx_queue, elem, msg_len);
++
++        /* interrupt the driver */
++        virtio_notify(&vgen->parent_obj, vgen->rx_queue);
++        //info_report("Sent data to driver");
++    }
++    return NULL;
++}
++
++
++/*
++ * This function gets the host features as a parameter and add to it all the
++ * features supported by the device.
++ * This bt-device has no currently defined feature bits but we still need
++ * this function because when a device is plugged this function is called to
++ * check the features offer by the device so it must exist and return the
++ * host features without any change.
++ */
++static uint64_t
++get_features(VirtIODevice *vdev, uint64_t features, Error **errp)
++{
++    VirtIOGeneral *vgen = VIRTIO_GENERAL(vdev);
++    for (int i = 0; i < vgen->feature_num; ++i) {
++        virtio_add_feature(&features, vgen->features[i]);
++    }
++    return features;
++}
++
++static void virtio_general_get_config(VirtIODevice *vdev, uint8_t *config)
++{
++    VirtIOGeneral *vgen = VIRTIO_GENERAL(vdev);
++    memcpy(config, vgen->config, vgen->config_size);
++    return;
++}
++
++static void virtio_general_device_realize(DeviceState *dev, Error **errp)
++{
++    FILE *fd;
++    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
++    VirtIOGeneral *vgen = VIRTIO_GENERAL(dev);
++    int ret;
++
++    if(!vgen->socket_path) {
++        error_setg(errp, "socket-path is not defined");
++        return;
++    }
++
++    if(!vgen->config_path) {
++        error_setg(errp, "config-path is not defined");
++        return;
++    }
++
++    if(!vgen->device_id) {
++        error_setg(errp, "device-id is not defined");
++        return;
++    }
++
++    if(vgen->vq_rx_id == -1) {
++        error_setg(errp, "rx-queue is not defined");
++        return;
++    }
++
++    if(!vgen->num_vqs) {
++        error_setg(errp, "num-virtqueues is not defined");
++        return;
++    }
++
++    /* Read configuration */
++    fd = fopen(vgen->config_path, "rb");
++    if (!fd) {
++        error_setg(errp, "Can't open virtio config file at %s: %s", vgen->config_path, strerror(errno));
++        return;
++    }
++    fseek(fd, 0L, SEEK_END);
++    vgen->config_size = ftell(fd);
++    rewind(fd);
++
++    printf("Read %i bytes from config", vgen->config_size);
++
++    vgen->config = malloc(vgen->config_size);
++
++    ret = fread(vgen->config, vgen->config_size, 1, fd);
++    if (ret < 0) {
++        error_setg(errp, "Can't read from virtio config file at %s: %s", vgen->config_path, strerror(errno));
++        return;
++    }
++    fclose(fd);
++
++    /* common virtio device initialization */
++    virtio_init(vdev, vgen->device_id, vgen->config_size);
++
++    /* Setup virtqueues */
++    for (int i = 0; i < vgen->num_vqs; ++i) {
++        if (i == vgen->vq_rx_id) {
++            vgen->rx_queue = virtio_add_queue(vdev, VIRTQUEUE_MAX_SIZE, handle_nop);
++        } else if (i == vgen->vq_tx_id) {
++            vgen->tx_queue = virtio_add_queue(vdev, VIRTQUEUE_MAX_SIZE, handle_tx);
++        } else {
++            virtio_add_queue(vdev, VIRTQUEUE_MAX_SIZE, handle_nop);
++        }
++    }
++
++    /* Setup socket */
++    vgen->socket_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
++    struct sockaddr_un saddr = {AF_UNIX};
++
++    /* Set timeout for read */
++    /*struct timeval tv;
++    tv.tv_sec = 0;
++    tv.tv_usec = 1000;
++    setsockopt(vgen->socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);*/
++
++    strncpy(saddr.sun_path, vgen->socket_path, sizeof(saddr.sun_path) - 1);
++    ret = connect(vgen->socket_fd, (struct sockaddr*) &saddr, sizeof(saddr));
++    if(ret < 0) {
++        error_setg(errp, "Cant connect to socket %s: %s", vgen->socket_path, strerror(errno));
++        return;
++    }
++
++    qemu_thread_create(&vgen->listen_thread, "virtio-general-listen", &handle_socket, vgen, QEMU_THREAD_JOINABLE);
++}
++
++static void virtio_general_device_unrealize(DeviceState *dev)
++{
++    error_report("virtio_general: unrealize");
++
++    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
++    //VirtIOGeneral *vgen = VIRTIO_GENERAL(dev);
++
++    /* common virtio device cleanup */
++    virtio_cleanup(vdev);
++}
++
++static int virtio_general_post_load(void *opaque, int version_id) {
++    //VirtIOGeneral *vgen = VIRTIO_GENERAL(opaque);
++
++    return 0;
++}
++
++static const VMStateDescription vmstate_virtio_general = {
++        .name = "virtio-general",
++        .fields = (VMStateField[]) {
++                VMSTATE_VIRTIO_DEVICE,
++                VMSTATE_END_OF_LIST()
++        },
++        .post_load = virtio_general_post_load
++};
++
++static Property virtio_general_properties[] = {
++        DEFINE_PROP_END_OF_LIST(),
++};
++
++
++static void virtio_general_class_init(ObjectClass *klass, void *data)
++{
++    DeviceClass *dc = DEVICE_CLASS(klass);
++    VirtioDeviceClass *vdc = VIRTIO_DEVICE_CLASS(klass);
++
++    device_class_set_props(dc, virtio_general_properties);
++    set_bit(DEVICE_CATEGORY_MISC, dc->categories);
++    dc->vmsd = &vmstate_virtio_general;
++    vdc->realize = virtio_general_device_realize;
++    vdc->unrealize = virtio_general_device_unrealize;
++    vdc->get_features = get_features;
++    vdc->get_config = virtio_general_get_config;
++}
++
++static const TypeInfo virtio_general_info = {
++        .name = TYPE_VIRTIO_GENERAL,
++        .parent = TYPE_VIRTIO_DEVICE,
++        .instance_size = sizeof(VirtIOGeneral),
++        .class_init = virtio_general_class_init,
++};
++
++static void virtio_register_types(void)
++{
++    type_register_static(&virtio_general_info);
++}
++
++type_init(virtio_register_types)
+diff --git a/include/hw/virtio/virtio-general.h b/include/hw/virtio/virtio-general.h
+new file mode 100644
+index 0000000000..2d143138d5
+--- /dev/null
++++ b/include/hw/virtio/virtio-general.h
+@@ -0,0 +1,38 @@
++/*
++ * Virtio BT
++ *
++ */
++
++#ifndef QEMU_VIRTIO_GENERAL_H
++#define QEMU_VIRTIO_GENERAL_H
++
++#include "hw/virtio/virtio.h"
++#include "chardev/char-fe.h"
++#include <sys/socket.h>
++
++#define TYPE_VIRTIO_GENERAL "virtio-general-device"
++OBJECT_DECLARE_SIMPLE_TYPE(VirtIOGeneral, VIRTIO_GENERAL)
++#define VIRTIO_GENERAL_GET_PARENT_CLASS(obj) \
++        OBJECT_GET_PARENT_CLASS(obj, TYPE_VIRTIO_GENERAL)
++
++#define VIRTIO_MAX_BUFFER_SIZE 8192
++
++struct VirtIOGeneral {
++    VirtIODevice parent_obj;
++    int socket_fd;
++    char *socket_path;
++    char *config_path;
++    void *config;
++    uint16_t config_size;
++    VirtQueue *tx_queue;
++    VirtQueue *rx_queue;
++    QemuThread listen_thread;
++    uint16_t device_id;
++    uint16_t num_vqs;
++    int32_t vq_rx_id;
++    int32_t vq_tx_id;
++    uint32_t feature_num;
++    uint16_t *features;
++};
++
++#endif
+-- 
+2.44.0
+

@@ -1,0 +1,29 @@
+[   10.666863] [ BUG: Invalid wait context ]
+[   10.668597] 6.9.0-rc5-00045-gf0b70210b102-dirty #1 Tainted: G        W
+[   10.671374] -----------------------------
+[   10.673131] kworker/u5:2/48 is trying to lock:
+[   10.675049] ffffffff857d3788 (hci_cb_list_lock){+.+.}-{3:3}, at: hci_le_create_big_complete_evt+0x37c/0xa90
+[   10.679422] other info that might help us debug this:
+[   10.681296] context-{4:4}
+[   10.682295] 4 locks held by kworker/u5:2/48:
+[   10.683957]  #0: ffff88800a6f3148 ((wq_completion)hci0#2){+.+.}-{0:0}, at: process_one_work+0xf19/0x17b0
+[   10.687348]  #1: ffffc90000527da0 ((work_completion)(&hdev->rx_work)){+.+.}-{0:0}, at: process_one_work+0x72b/0x17b0
+[   10.691332]  #2: ffff88800a840078 (&hdev->lock){+.+.}-{3:3}, at: hci_le_create_big_complete_evt+0xd2/0xa90
+[   10.694929]  #3: ffffffff8520b720 (rcu_read_lock){....}-{1:2}, at: hci_le_create_big_complete_evt+0xe9/0xa90
+[   10.698715] stack backtrace:
+[   10.699840] CPU: 0 PID: 48 Comm: kworker/u5:2 Tainted: G        W          6.9.0-rc5-00045-gf0b70210b102-dirty #1
+[   10.703543] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+[   10.707876] Workqueue: hci0 hci_rx_work
+[   10.709404] Call Trace:
+[   10.710337]  <TASK>
+[   10.711189]  dump_stack_lvl+0x68/0xa0
+[   10.712669]  __lock_acquire+0x7ec/0x3a30
+[   10.714242]  ? lockdep_hardirqs_on_prepare+0x262/0x3f0
+[   10.716288]  ? __pfx___lock_acquire+0x10/0x10
+[   10.718004]  lock_acquire+0x199/0x4f0
+[   10.719455]  ? hci_le_create_big_complete_evt+0x37c/0xa90
+[   10.721609]  ? __pfx_lock_acquire+0x10/0x10
+[   10.723275]  ? dump_stack_lvl+0x8d/0xa0
+[   10.724804]  ? dump_stack_lvl+0x90/0xa0
+[   10.726304]  __mutex_lock+0x144/0xac0
+[   10.727772]  ? hci_le_create_big_complete_evt+0x37c/0xa90

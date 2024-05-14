@@ -1,0 +1,52 @@
+[  204.000776] sysfs: cannot create duplicate filename '/devices/virtual/bluetooth/hci0/hci0:0'
+[  204.001896] CPU: 0 PID: 45 Comm: kworker/u3:2 Not tainted 5.17.0-rc1-00498-g133742f070cd #9
+[  204.002953] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014
+[  204.004397] Workqueue: hci0 hci_rx_work
+[  204.004916] Call Trace:
+[  204.005248]  <TASK>
+[  204.005543]  dump_stack_lvl+0x45/0x59
+[  204.006034]  sysfs_warn_dup.cold+0x17/0x24
+[  204.006574]  sysfs_create_dir_ns+0x1eb/0x260
+[  204.007142]  ? sysfs_create_mount_point+0x80/0x80
+[  204.007753]  ? rwlock_bug.part.0+0x90/0x90
+[  204.008312]  ? do_raw_spin_unlock+0x4f/0x210
+[  204.008874]  kobject_add_internal+0x223/0x920
+[  204.009452]  ? lock_release+0x3b2/0x6f0
+[  204.009951]  kobject_add+0x120/0x190
+[  204.010434]  ? kset_create_and_add+0x170/0x170
+[  204.011013]  ? lockdep_init_map_type+0x2c3/0x7a0
+[  204.011639]  ? __raw_spin_lock_init+0x36/0x110
+[  204.012221]  ? kobject_get+0x50/0xe0
+[  204.012701]  device_add+0x2cd/0x1b30
+[  204.013172]  ? dev_set_name+0xa6/0xd0
+[  204.013652]  ? device_initialize+0x4b0/0x4b0
+[  204.014222]  ? __fw_devlink_link_to_suppliers+0x480/0x480
+[  204.014917]  ? hci_debugfs_create_conn+0x17b/0x1f0
+[  204.015538]  ? mgmt_send_event_skb+0x295/0x3f0
+[  204.016124]  ? hci_debugfs_create_le+0x850/0x850
+[  204.016724]  hci_conn_add_sysfs+0x8d/0xf0
+[  204.017255]  le_conn_complete_evt.part.0+0xf8a/0x1eb0
+[  204.017926]  ? bt_warn+0x99/0x107
+[  204.018374]  ? hci_encrypt_change_evt+0xf50/0xf50
+[  204.018985]  ? bt_warn+0xd7/0x107
+[  204.019432]  ? bt_info+0x107/0x107
+[  204.019900]  hci_le_conn_complete_evt+0x289/0x320
+[  204.020527]  hci_le_meta_evt+0x247/0x450
+[  204.021037]  ? hci_le_enh_conn_complete_evt+0x310/0x310
+[  204.021737]  hci_event_packet+0x61b/0xe90
+[  204.022261]  ? hci_hardware_error_evt+0xc0/0xc0
+[  204.022847]  ? hci_le_conn_complete_evt+0x320/0x320
+[  204.023471]  ? lockdep_hardirqs_on_prepare+0x17b/0x420
+[  204.024134]  hci_rx_work+0x4d5/0xc50
+[  204.024616]  process_one_work+0x8fb/0x15a0
+[  204.025167]  ? lock_release+0x6f0/0x6f0
+[  204.025671]  ? pwq_dec_nr_in_flight+0x230/0x230
+[  204.026259]  ? rwlock_bug.part.0+0x90/0x90
+[  204.026783]  ? _raw_spin_lock_irq+0x41/0x50
+[  204.027329]  worker_thread+0x576/0x1240
+[  204.027839]  ? process_one_work+0x15a0/0x15a0
+[  204.028417]  kthread+0x29d/0x340
+[  204.028846]  ? kthread_complete_and_exit+0x20/0x20
+[  204.029460]  ret_from_fork+0x1f/0x30
+[  204.029950]  </TASK>
+[  204.030320] kobject_add_internal failed for hci0:0 with -EEXIST, don't try to register things with the same name in the same directory.

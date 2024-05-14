@@ -1,0 +1,15 @@
+==================================================================
+BUG: KCSAN: data-race in test_kernel_rmw_array+0x71/0xd0
+
+race at unknown origin, with read to 0xffffffffc009bdb0 of 8 bytes by task 515 on cpu 2:
+ test_kernel_rmw_array+0x71/0xd0
+ access_thread+0x89/0xd0
+ kthread+0x23e/0x260
+ ret_from_fork+0x22/0x30
+
+value changed: 0x0000000000002328 -> 0x0000000000002329
+
+Reported by Kernel Concurrency Sanitizer on:
+CPU: 2 PID: 515 Comm: access_thread Not tainted 5.12.0-rc2+ #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-2 04/01/2014
+==================================================================

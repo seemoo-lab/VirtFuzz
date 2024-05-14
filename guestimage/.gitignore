@@ -1,0 +1,4 @@
+chroot/*
+*.pub
+*.id_rsa
+*.img

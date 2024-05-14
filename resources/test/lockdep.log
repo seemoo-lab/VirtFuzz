@@ -1,0 +1,23 @@
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+turning off the locking correctness validator.
+CPU: 1 PID: 562 Comm: kworker/u4:3 Not tainted 5.3.0-rc6-next-20190827 #74
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Workqueue: events_unbound flush_to_ldisc
+Call Trace:
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0x172/0x1f0 lib/dump_stack.c:113
+ assign_lock_key kernel/locking/lockdep.c:881 [inline]
+ register_lock_class+0x179e/0x1850 kernel/locking/lockdep.c:1190
+ __lock_acquire+0xf4/0x4a00 kernel/locking/lockdep.c:3837
+ lock_acquire+0x190/0x410 kernel/locking/lockdep.c:4487
+ percpu_down_read include/linux/percpu-rwsem.h:40 [inline]
+ hci_uart_tty_receive+0xcf/0x6e0 drivers/bluetooth/hci_ldisc.c:603
+ tty_ldisc_receive_buf+0x15f/0x1c0 drivers/tty/tty_buffer.c:465
+ tty_port_default_receive_buf+0x7d/0xb0 drivers/tty/tty_port.c:38
+ receive_buf drivers/tty/tty_buffer.c:481 [inline]
+ flush_to_ldisc+0x222/0x390 drivers/tty/tty_buffer.c:533
+ process_one_work+0x9af/0x1740 kernel/workqueue.c:2269
+ worker_thread+0x98/0xe40 kernel/workqueue.c:2415
+ kthread+0x361/0x430 kernel/kthread.c:255
+ ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352

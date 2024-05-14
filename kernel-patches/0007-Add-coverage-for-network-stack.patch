@@ -1,0 +1,71 @@
+From 6c61ee017eaa8e7401f6b5acce4d6ba7cbbac573 Mon Sep 17 00:00:00 2001
+From: Soenke Huster <shuster@seemoo.tu-darmstadt.de>
+Date: Tue, 19 Jul 2022 10:20:13 +0200
+Subject: [PATCH 7/7] Add coverage for network stack
+
+---
+ net/802/Makefile      | 1 +
+ net/8021q/Makefile    | 1 +
+ net/core/Makefile     | 1 +
+ net/ethernet/Makefile | 1 +
+ net/ipv4/Makefile     | 1 +
+ net/ipv6/Makefile     | 1 +
+ 6 files changed, 6 insertions(+)
+
+diff --git a/net/802/Makefile b/net/802/Makefile
+index bfed80221b8b..e8a01e6c1107 100644
+--- a/net/802/Makefile
++++ b/net/802/Makefile
+@@ -12,3 +12,4 @@ obj-$(CONFIG_ATALK)	+= p8022.o psnap.o
+ obj-$(CONFIG_STP)	+= stp.o
+ obj-$(CONFIG_GARP)	+= garp.o
+ obj-$(CONFIG_MRP)	+= mrp.o
++KCOV_INSTRUMENT := y
+diff --git a/net/8021q/Makefile b/net/8021q/Makefile
+index e05d4d7aab35..b61d74339e15 100644
+--- a/net/8021q/Makefile
++++ b/net/8021q/Makefile
+@@ -9,3 +9,4 @@ obj-$(CONFIG_VLAN_8021Q)		+= 8021q.o
+ 8021q-$(CONFIG_VLAN_8021Q_GVRP)		+= vlan_gvrp.o
+ 8021q-$(CONFIG_VLAN_8021Q_MVRP)		+= vlan_mvrp.o
+ 8021q-$(CONFIG_PROC_FS)			+= vlanproc.o
++KCOV_INSTRUMENT := y
+diff --git a/net/core/Makefile b/net/core/Makefile
+index a8e4f737692b..844fdf5fb397 100644
+--- a/net/core/Makefile
++++ b/net/core/Makefile
+@@ -39,3 +39,4 @@ obj-$(CONFIG_NET_SOCK_MSG) += skmsg.o
+ obj-$(CONFIG_BPF_SYSCALL) += sock_map.o
+ obj-$(CONFIG_BPF_SYSCALL) += bpf_sk_storage.o
+ obj-$(CONFIG_OF)	+= of_net.o
++KCOV_INSTRUMENT := y
+diff --git a/net/ethernet/Makefile b/net/ethernet/Makefile
+index e03eff94e0db..e98161d54833 100644
+--- a/net/ethernet/Makefile
++++ b/net/ethernet/Makefile
+@@ -4,3 +4,4 @@
+ #
+ 
+ obj-y					+= eth.o
++KCOV_INSTRUMENT := y
+diff --git a/net/ipv4/Makefile b/net/ipv4/Makefile
+index bbdd9c44f14e..17b68ab8d837 100644
+--- a/net/ipv4/Makefile
++++ b/net/ipv4/Makefile
+@@ -71,3 +71,4 @@ obj-$(CONFIG_XFRM) += xfrm4_policy.o xfrm4_state.o xfrm4_input.o \
+ ifeq ($(CONFIG_BPF_JIT),y)
+ obj-$(CONFIG_BPF_SYSCALL) += bpf_tcp_ca.o
+ endif
++KCOV_INSTRUMENT := y
+diff --git a/net/ipv6/Makefile b/net/ipv6/Makefile
+index 3036a45e8a1e..8d4299daa0e9 100644
+--- a/net/ipv6/Makefile
++++ b/net/ipv6/Makefile
+@@ -53,3 +53,4 @@ ifneq ($(CONFIG_IPV6),)
+ obj-$(CONFIG_NET_UDP_TUNNEL) += ip6_udp_tunnel.o
+ obj-y += mcast_snoop.o
+ endif
++KCOV_INSTRUMENT := y
+-- 
+2.37.1
+

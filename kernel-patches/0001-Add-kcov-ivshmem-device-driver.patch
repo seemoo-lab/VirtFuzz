@@ -1,0 +1,192 @@
+From 14cbc41e474b88999a3f72cbdfd0b5ba7f55bcd6 Mon Sep 17 00:00:00 2001
+From: Hui Peng <benquike@163.com>
+Date: Tue, 4 Feb 2020 21:51:28 -0500
+Subject: [PATCH 1/3] Add kcov-ivshmem device driver
+
+This is a stripped version of the patch for USBFuzz:
+See https://github.com/HexHive/USBFuzz/blob/master/OSes/linux-target/kernel-patches/0001-Add-ivshmem-device-driver.patch
+
+---
+ drivers/staging/ivshmem/Kconfig   |   6 ++
+ drivers/staging/ivshmem/Makefile  |   4 +
+ drivers/staging/ivshmem/ivshmem.c | 144 ++++++++++++++++++++++++++++++
+ 3 files changed, 154 insertions(+)
+ create mode 100644 drivers/staging/ivshmem/Kconfig
+ create mode 100644 drivers/staging/ivshmem/Makefile
+ create mode 100644 drivers/staging/ivshmem/ivshmem.c
+
+diff --git a/drivers/staging/ivshmem/Kconfig b/drivers/staging/ivshmem/Kconfig
+new file mode 100644
+index 000000000000..90a0e5904c1d
+--- /dev/null
++++ b/drivers/staging/ivshmem/Kconfig
+@@ -0,0 +1,6 @@
++config IVSHMEM
++       bool "InterVM shared memory device driver"
++       depends on PCI
++       help
++	Device driver for InterVM shared memory device, borrowed from:
++	https://github.com/cmacdonell/ivshmem-code
+diff --git a/drivers/staging/ivshmem/Makefile b/drivers/staging/ivshmem/Makefile
+new file mode 100644
+index 000000000000..06d7e5f38865
+--- /dev/null
++++ b/drivers/staging/ivshmem/Makefile
+@@ -0,0 +1,4 @@
++obj-$(CONFIG_IVSHMEM)  += ivshmem.o
++
++CFLAGS_ivshmen.o := -O0
++
+diff --git a/drivers/staging/ivshmem/ivshmem.c b/drivers/staging/ivshmem/ivshmem.c
+new file mode 100644
+index 000000000000..4a20ed1482c6
+--- /dev/null
++++ b/drivers/staging/ivshmem/ivshmem.c
+@@ -0,0 +1,144 @@
++/*
++ * drivers/char/kvm_ivshmem.c - driver for KVM Inter-VM shared memory PCI device
++ *
++ * Copyright 2009 Cam Macdonell <cam@cs.ualberta.ca>
++ *
++ * Based on cirrusfb.c and 8139cp.c:
++ *         Copyright 1999-2001 Jeff Garzik
++ *         Copyright 2001-2004 Jeff Garzik
++ *
++ */
++
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/proc_fs.h>
++#include <linux/interrupt.h>
++#include <linux/spinlock.h>
++#include <linux/string.h>
++
++typedef struct kvm_ivshmem_device {
++	struct pci_dev *dev;
++	bool		 enabled;
++
++	void * base_addr;
++	unsigned int ioaddr;
++	unsigned int ioaddr_size;
++} kvm_ivshmem_device;
++
++static kvm_ivshmem_device kvm_ivshmem_dev;
++
++static struct pci_device_id kvm_ivshmem_id_table[] = {
++	{ 0x1af4, 0x1110, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
++	{ 0 },
++};
++MODULE_DEVICE_TABLE (pci, kvm_ivshmem_id_table);
++
++static void kvm_ivshmem_remove_device(struct pci_dev* pdev);
++static int kvm_ivshmem_probe_device(struct pci_dev *pdev,
++				    const struct pci_device_id * ent);
++void * ivshmem_kcov_area(unsigned int *size);
++
++static struct pci_driver kvm_ivshmem_pci_driver = {
++	.name		= "kvm-ivshmem",
++	.id_table	= kvm_ivshmem_id_table,
++	.probe		= kvm_ivshmem_probe_device,
++	.remove		= kvm_ivshmem_remove_device,
++};
++
++void * ivshmem_kcov_area(unsigned int *size) {
++	if(kvm_ivshmem_dev.enabled == false) {
++		return 0;
++	}
++	*size = kvm_ivshmem_dev.ioaddr_size / sizeof(unsigned long);
++	return kvm_ivshmem_dev.base_addr;
++}
++EXPORT_SYMBOL(ivshmem_kcov_area);
++
++static int kvm_ivshmem_probe_device(struct pci_dev *pdev,
++				    const struct pci_device_id * ent) {
++	int result;
++	kvm_ivshmem_dev.dev = pdev;
++
++	result = pci_enable_device(pdev);
++	if (result) {
++		pr_err("Cannot probe KVM_IVSHMEM device %s: error %d\n",
++		pci_name(pdev), result);
++		return result;
++	}
++
++	result = pci_request_regions(pdev, "kvm_ivshmem");
++	if (result < 0) {
++		pr_err("KVM_IVSHMEM: cannot request regions\n");
++		goto pci_disable;
++	}
++
++	kvm_ivshmem_dev.ioaddr = pci_resource_start(pdev, 2);
++	kvm_ivshmem_dev.ioaddr_size = pci_resource_len(pdev, 2);
++	kvm_ivshmem_dev.base_addr = pci_iomap(pdev, 2, 0);
++
++	if (!kvm_ivshmem_dev.base_addr) {
++		pr_err("KVM_IVSHMEM: cannot iomap region of size %d\n",
++							kvm_ivshmem_dev.ioaddr_size);
++		goto pci_release;
++	}
++
++	memset(kvm_ivshmem_dev.base_addr, 0, kvm_ivshmem_dev.ioaddr_size);
++	kvm_ivshmem_dev.enabled = true;
++
++	printk("KVM_IVSHMEM is ready");
++	printk("KVM_IVSHMEM: ioaddr = %x, base_addr = %p, ioaddr_size = %d\n",
++	       kvm_ivshmem_dev.ioaddr,
++	       kvm_ivshmem_dev.base_addr,
++	       kvm_ivshmem_dev.ioaddr_size);
++
++	return 0;
++
++pci_release:
++	pci_iounmap(pdev, kvm_ivshmem_dev.base_addr);
++	pci_release_regions(pdev);
++pci_disable:
++	pci_disable_device(pdev);
++	return -EBUSY;
++}
++
++static void kvm_ivshmem_remove_device(struct pci_dev* pdev)
++{
++	pr_info("Unregister kvm_ivshmem device.\n");
++	free_irq(pdev->irq,&kvm_ivshmem_dev);
++	pci_iounmap(pdev, kvm_ivshmem_dev.base_addr);
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
++}
++
++static void __exit kvm_ivshmem_cleanup_module (void)
++{
++	pci_unregister_driver (&kvm_ivshmem_pci_driver);
++}
++
++static int __init kvm_ivshmem_init_module (void)
++{
++
++	int err = -ENOMEM;
++	err = pci_register_driver(&kvm_ivshmem_pci_driver);
++	if (err < 0) {
++		goto error;
++	}
++
++	return 0;
++
++error:
++	return err;
++}
++
++
++
++module_init(kvm_ivshmem_init_module);
++module_exit(kvm_ivshmem_cleanup_module);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Cam Macdonell <cam@cs.ualberta.ca>");
++MODULE_DESCRIPTION("KVM inter-VM shared memory module");
++MODULE_VERSION("1.0");
++
+-- 
+2.44.0
+

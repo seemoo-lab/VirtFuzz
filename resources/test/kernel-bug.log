@@ -1,0 +1,42 @@
+[   12.985082] skbuff: skb_over_panic: text:ffffffff8192b6e1 len:4096 put:1024 head:ffff8880061fa000 data:ffff8880061fa000 tail:0x1000 end:0xec0 dev:<NULL>
+[   12.989535] ------------[ cut here ]------------
+[   12.991072] kernel BUG at net/core/skbuff.c:116!
+[   12.992614] invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+[   12.993588] CPU: 0 PID: 42 Comm: kworker/0:3 Not tainted 6.0.0-rc1-13728-gc5c1bb5781d9-dirty #9
+[   12.993588] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+[   12.993588] Workqueue: events hwsim_virtio_rx_work
+[   12.993588] RIP: 0010:skb_panic+0x6d/0x6f
+[   12.993588] Code: cc 00 00 00 41 56 48 89 ee 48 c7 c7 b8 be ab 82 4c 8b 8b d0 00 00 00 50 8b 83 c8 00 00 00 50 ff b3 d8 00 00 00 e8 0d 09 fb ff <0f> 0b e8 fe 44 08 ff 48 8b 54 24 18 44 89 ee 48 89 ef 48 c7 c1 80
+[   12.993588] RSP: 0018:ffffc90000397d88 EFLAGS: 00010246
+[   12.993588] RAX: 000000000000008c RBX: ffff88800620f000 RCX: 0000000000000000
+[   12.993588] RDX: 0000000000000000 RSI: ffffffff829e9e11 RDI: 00000000ffffffff
+[   12.993588] RBP: ffffffff82727290 R08: 0000000000000000 R09: 00000000ffffdfff
+[   12.993588] R10: ffffc90000397c30 R11: ffffffff82d54b28 R12: ffffffff8192b6e1
+[   12.993588] R13: 0000000000000400 R14: ffffffff829e6e21 R15: 0000000000000000
+[   12.993588] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
+[   12.993588] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   12.993588] CR2: 0000560ff54351c8 CR3: 000000000a216000 CR4: 00000000000006f0
+[   12.993588] Call Trace:
+[   12.993588]  <TASK>
+[   12.993588]  skb_put.cold+0x1c/0x1c
+[   12.993588]  hwsim_virtio_rx_work+0xd1/0x1d0
+[   12.993588]  process_one_work+0x2a6/0x5d0
+[   12.993588]  worker_thread+0x4a/0x3e0
+[   12.993588]  ? process_one_work+0x5d0/0x5d0
+[   12.993588]  kthread+0xed/0x120
+[   12.993588]  ? kthread_complete_and_exit+0x20/0x20
+[   12.993588]  ret_from_fork+0x22/0x30
+[   12.993588]  </TASK>
+[   12.993588] Modules linked in:
+[   13.042627] ---[ end trace 0000000000000000 ]---
+[   13.044135] RIP: 0010:skb_panic+0x6d/0x6f
+[   13.045449] Code: cc 00 00 00 41 56 48 89 ee 48 c7 c7 b8 be ab 82 4c 8b 8b d0 00 00 00 50 8b 83 c8 00 00 00 50 ff b3 d8 00 00 00 e8 0d 09 fb ff <0f> 0b e8 fe 44 08 ff 48 8b 54 24 18 44 89 ee 48 89 ef 48 c7 c1 80
+[   13.051663] RSP: 0018:ffffc90000397d88 EFLAGS: 00010246
+[   13.053369] RAX: 000000000000008c RBX: ffff88800620f000 RCX: 0000000000000000
+[   13.055661] RDX: 0000000000000000 RSI: ffffffff829e9e11 RDI: 00000000ffffffff
+[   13.057930] RBP: ffffffff82727290 R08: 0000000000000000 R09: 00000000ffffdfff
+[   13.060210] R10: ffffc90000397c30 R11: ffffffff82d54b28 R12: ffffffff8192b6e1
+[   13.062580] R13: 0000000000000400 R14: ffffffff829e6e21 R15: 0000000000000000
+[   13.064908] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
+[   13.067459] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   13.069320] CR2: 0000560ff54351c8 CR3: 000000000a216000 CR4: 00000000000006f0

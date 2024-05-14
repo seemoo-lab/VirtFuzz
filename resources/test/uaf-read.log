@@ -1,0 +1,209 @@
+Arch Linux 5.17.0-rc1-00498-g133742f070cd (ttyS0)
+
+[   37.884280] Bluetooth: hci0: Received unexpected HCI Event 0x00
+[   37.891031] Bluetooth: hci0: unexpected event 0x0f length: 49 > 4
+[   37.907261] Bluetooth: hci0: SCO packet for unknown connection handle 3200
+[   37.937343] Bluetooth: hci0: ACL packet for unknown connection handle 1
+[   37.953344] Bluetooth: hci0: unexpected event 0x08 length: 36 > 4
+[   37.966768] Bluetooth: hci0: unexpected event 0x0f length: 55 > 4
+[   37.967453] Bluetooth: hci0: unexpected event for opcode 0xffff
+[   37.980217] Bluetooth: hci0: unexpected event 0x0f length: 69 > 4
+[   37.980254] Bluetooth: hci0: unexpected event for opcode 0x1818
+[   37.993484] Bluetooth: hci0: unexpected event for opcode 0x0405
+[   38.010056] Bluetooth: hci0: unexpected subevent 0x01 length: 54 > 18
+[   38.026701] Bluetooth: hci0: unexpected subevent 0x01 length: 38 > 18
+[   38.040006] Bluetooth: hci0: unexpected event 0x10 length: 20 > 1
+[   38.060025] Bluetooth: hci0: unexpected event 0x08 length: 60 > 4
+[   38.073361] Bluetooth: hci0: unexpected event 0x06 length: 78 > 3
+[   38.093349] Bluetooth: hci0: unexpected event 0x06 length: 91 > 3
+[   38.106677] Bluetooth: hci0: unexpected event 0x06 length: 74 > 3
+[   38.120126] Bluetooth: hci0: unexpected event 0x06 length: 116 > 3
+[   38.220075] Bluetooth: hci0: ACL packet for unknown connection handle 3840
+[   38.240120] Bluetooth: hci0: wrong event for mode 0
+[   38.253429] Bluetooth: hci0: wrong event for mode 0
+[   38.270093] Bluetooth: unknown link type 237
+[   38.326670] Bluetooth: hci0: SCO packet for unknown connection handle 255
+[   38.410009] Bluetooth: hci0: SCO packet for unknown connection handle 2831
+[   38.443412] Bluetooth: hci0: unexpected event for opcode 0x041c
+[   38.463349] Bluetooth: hci0: unexpected subevent 0x01 length: 21 > 18
+[   38.489977] Bluetooth: hci0: SCO packet for unknown connection handle 1340
+[   38.499326] bluetoothd[148]: src/device.c:load_gatt_db() Unable to load key file from /var/lib/bluetooth/00:1A:7D:DA:71:13/cache/)
+[   38.502105] bluetoothd[148]: src/device.c:load_gatt_db() No cache for 80:00:09:FF:22:01
+[   38.520011] Bluetooth: hci0: unexpected subevent 0x01 length: 30 > 18
+[   38.520910] debugfs: Directory '0' with parent 'hci0' already present!
+[   38.521834] sysfs: cannot create duplicate filename '/devices/virtual/bluetooth/hci0/hci0:0'
+[   38.522775] CPU: 0 PID: 45 Comm: kworker/u3:2 Not tainted 5.17.0-rc1-00498-g133742f070cd #9
+[   38.523651] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014
+[   38.524832] Workqueue: hci0 hci_rx_work
+[   38.525248] Call Trace:
+[   38.525516]  <TASK>
+[   38.525751]  dump_stack_lvl+0x45/0x59
+[   38.526149]  sysfs_warn_dup.cold+0x17/0x24
+[   38.526586]  sysfs_create_dir_ns+0x1eb/0x260
+[   38.526988]  ? sysfs_create_mount_point+0x80/0x80
+[   38.527422]  ? rwlock_bug.part.0+0x90/0x90
+[   38.527805]  ? do_raw_spin_unlock+0x4f/0x210
+[   38.528203]  kobject_add_internal+0x223/0x920
+[   38.528610]  ? lock_release+0x3b2/0x6f0
+[   38.529093]  kobject_add+0x120/0x190
+[   38.529558]  ? kset_create_and_add+0x170/0x170
+[   38.530131]  ? lockdep_init_map_type+0x2c3/0x7a0
+[   38.530722]  ? __raw_spin_lock_init+0x36/0x110
+[   38.531288]  ? kobject_get+0x50/0xe0
+[   38.531753]  device_add+0x2cd/0x1b30
+[   38.532211]  ? dev_set_name+0xa6/0xd0
+[   38.532679]  ? device_initialize+0x4b0/0x4b0
+[   38.533227]  ? __fw_devlink_link_to_suppliers+0x480/0x480
+[   38.533897]  ? hci_debugfs_create_conn+0x17b/0x1f0
+[   38.534470]  ? mgmt_send_event_skb+0x295/0x3f0
+[   38.535033]  ? hci_debugfs_create_le+0x850/0x850
+[   38.535617]  hci_conn_add_sysfs+0x8d/0xf0
+[   38.536128]  le_conn_complete_evt.part.0+0xf8a/0x1eb0
+[   38.536782]  ? bt_warn+0x99/0x107
+[   38.537210]  ? hci_encrypt_change_evt+0xf50/0xf50
+[   38.537798]  ? bt_warn+0xd7/0x107
+[   38.538226]  ? bt_info+0x107/0x107
+[   38.538672]  hci_le_conn_complete_evt+0x289/0x320
+[   38.539269]  hci_le_meta_evt+0x247/0x450
+[   38.539765]  ? hci_le_enh_conn_complete_evt+0x310/0x310
+[   38.540426]  hci_event_packet+0x61b/0xe90
+[   38.540936]  ? hci_hardware_error_evt+0xc0/0xc0
+[   38.541513]  ? hci_le_conn_complete_evt+0x320/0x320
+[   38.542135]  ? lockdep_hardirqs_on_prepare+0x17b/0x420
+[   38.542781]  hci_rx_work+0x4d5/0xc50
+[   38.543251]  process_one_work+0x8fb/0x15a0
+[   38.543778]  ? lock_release+0x6f0/0x6f0
+[   38.544264]  ? pwq_dec_nr_in_flight+0x230/0x230
+[   38.544841]  ? rwlock_bug.part.0+0x90/0x90
+[   38.545355]  ? _raw_spin_lock_irq+0x41/0x50
+[   38.545890]  worker_thread+0x576/0x1240
+[   38.546388]  ? process_one_work+0x15a0/0x15a0
+[   38.546907]  kthread+0x29d/0x340
+[   38.547313]  ? kthread_complete_and_exit+0x20/0x20
+[   38.547906]  ret_from_fork+0x1f/0x30
+[   38.548382]  </TASK>
+[   38.548751] kobject_add_internal failed for hci0:0 with -EEXIST, don't try to register things with the same name in the same dire.
+[   38.550235] Bluetooth: hci0: failed to register connection device
+[   38.577794] ==================================================================
+[   38.578781] BUG: KASAN: use-after-free in hci_send_acl+0xaba/0xc50
+[   38.579569] Read of size 8 at addr ffff88800cab2218 by task bluetoothd/148
+[   38.580367]
+[   38.580578] CPU: 0 PID: 148 Comm: bluetoothd Not tainted 5.17.0-rc1-00498-g133742f070cd #9
+[   38.581495] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014
+[   38.582886] Call Trace:
+[   38.583214]  <TASK>
+[   38.583495]  dump_stack_lvl+0x45/0x59
+[   38.583922]  print_address_description.constprop.0+0x1f/0x150
+[   38.584582]  ? hci_send_acl+0xaba/0xc50
+[   38.585071]  kasan_report.cold+0x7f/0x11b
+[   38.585584]  ? hci_send_acl+0xaba/0xc50
+[   38.586076]  hci_send_acl+0xaba/0xc50
+[   38.586547]  ? __check_object_size+0x213/0x2c0
+[   38.587111]  ? __sanitizer_cov_trace_const_cmp4+0x1c/0x70
+[   38.587785]  ? l2cap_skbuff_fromiovec+0x3be/0x4c0
+[   38.588384]  l2cap_do_send+0x23f/0x3d0
+[   38.588864]  l2cap_chan_send+0xc06/0x2cc0
+[   38.589369]  ? release_sock+0x16/0x170
+[   38.589861]  ? l2cap_sock_sendmsg+0x1f3/0x2b0
+[   38.590423]  ? l2cap_rx_state_recv+0xff0/0xff0
+[   38.590986]  ? lock_release+0x3b2/0x6f0
+[   38.591474]  ? l2cap_sock_sendmsg+0x17e/0x2b0
+[   38.592025]  ? lock_downgrade+0x6d0/0x6d0
+[   38.592533]  ? rwlock_bug.part.0+0x90/0x90
+[   38.593056]  ? lockdep_hardirqs_on_prepare+0x17b/0x420
+[   38.593707]  l2cap_sock_sendmsg+0x201/0x2b0
+[   38.594233]  ? l2cap_sock_alloc_skb_cb+0x470/0x470
+[   38.594837]  sock_sendmsg+0xdc/0x110
+[   38.595297]  sock_write_iter+0x20f/0x370
+[   38.595796]  ? sock_sendmsg+0x110/0x110
+[   38.596287]  ? perf_callchain_user+0x80/0xa70
+[   38.596828]  ? lock_release+0x3b2/0x6f0
+[   38.597240]  ? __might_fault+0xb3/0x160
+[   38.597657]  ? lock_downgrade+0x6d0/0x6d0
+[   38.598091]  do_iter_readv_writev+0x343/0x690
+[   38.598608]  ? file_has_perm+0x1d9/0x240
+[   38.599119]  ? new_sync_write+0x610/0x610
+[   38.599645]  ? selinux_file_permission+0x114/0x410
+[   38.600244]  do_iter_write+0x132/0x640
+[   38.600656]  ? import_iovec+0x43/0x80
+[   38.601125]  vfs_writev+0x198/0x570
+[   38.601578]  ? vfs_iter_write+0xb0/0xb0
+[   38.602063]  ? lockdep_hardirqs_on_prepare+0x420/0x420
+[   38.602705]  ? _raw_spin_unlock_irq+0x2a/0x40
+[   38.603261]  ? perf_callchain_user+0x80/0xa70
+[   38.603822]  ? lock_is_held_type+0xd7/0x130
+[   38.604349]  ? find_held_lock+0x2c/0x110
+[   38.604850]  ? lock_release+0x3b2/0x6f0
+[   38.605338]  ? syscall_trace_enter.constprop.0+0x183/0x250
+[   38.606022]  ? lock_downgrade+0x6d0/0x6d0
+[   38.606543]  ? do_writev+0x202/0x280
+[   38.607000]  do_writev+0x202/0x280
+[   38.607437]  ? vfs_writev+0x570/0x570
+[   38.607901]  ? ktime_get_coarse_real_ts64+0x111/0x140
+[   38.608527]  ? syscall_trace_enter.constprop.0+0x183/0x250
+[   38.609213]  do_syscall_64+0x38/0x90
+[   38.609670]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[   38.610307] RIP: 0033:0x7f4f03ee4f77
+[   38.610764] Code: 0f 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b8 0f 1f 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 b8 14 0
+[   38.613008] RSP: 002b:00007ffffca07f68 EFLAGS: 00000246 ORIG_RAX: 0000000000000014
+[   38.613936] RAX: ffffffffffffffda RBX: 00007ffffca07f90 RCX: 00007f4f03ee4f77
+[   38.614812] RDX: 0000000000000001 RSI: 00007ffffca07f90 RDI: 0000000000000016
+[   38.615687] RBP: 0000000000000016 R08: 0000000000000002 R09: 0000000000000001
+[   38.616561] R10: 00007ffffcbba080 R11: 0000000000000246 R12: 00007f4f0557a660
+[   38.617441] R13: 00007f4f0557a560 R14: 00007f4f0557ac00 R15: 00007f4f0554d6b0
+[   38.618348]  </TASK>
+[   38.618640]
+[   38.618851] Allocated by task 45:
+[   38.619283]  kasan_save_stack+0x1e/0x40
+[   38.619777]  __kasan_kmalloc+0x81/0xa0
+[   38.620207]  hci_chan_create+0x9a/0x2f0
+[   38.620641]  l2cap_conn_add.part.0+0x1a/0xdc0
+[   38.621110]  l2cap_connect_cfm+0x236/0x1000
+[   38.621634]  le_conn_complete_evt.part.0+0x175d/0x1eb0
+[   38.622269]  hci_le_conn_complete_evt+0x289/0x320
+[   38.622852]  hci_le_meta_evt+0x247/0x450
+[   38.623350]  hci_event_packet+0x61b/0xe90
+[   38.623849]  hci_rx_work+0x4d5/0xc50
+[   38.624297]  process_one_work+0x8fb/0x15a0
+[   38.624808]  worker_thread+0x576/0x1240
+[   38.625291]  kthread+0x29d/0x340
+[   38.625701]  ret_from_fork+0x1f/0x30
+[   38.626153]
+[   38.626360] Freed by task 45:
+[   38.626751]  kasan_save_stack+0x1e/0x40
+[   38.627236]  kasan_set_track+0x21/0x30
+[   38.627707]  kasan_set_free_info+0x20/0x30
+[   38.628217]  __kasan_slab_free+0xfb/0x130
+[   38.628718]  kfree+0xac/0x350
+[   38.629100]  hci_conn_cleanup+0x101/0x6a0
+[   38.629601]  hci_conn_del+0x27e/0x6c0
+[   38.630071]  hci_disconn_phylink_complete_evt+0xe0/0x120
+[   38.630726]  hci_event_packet+0x812/0xe90
+[   38.631229]  hci_rx_work+0x4d5/0xc50
+[   38.631682]  process_one_work+0x8fb/0x15a0
+[   38.632196]  worker_thread+0x576/0x1240
+[   38.632679]  kthread+0x29d/0x340
+[   38.633091]  ret_from_fork+0x1f/0x30
+[   38.633495]
+[   38.633671] The buggy address belongs to the object at ffff88800cab2200
+[   38.633671]  which belongs to the cache kmalloc-128 of size 128
+[   38.635093] The buggy address is located 24 bytes inside of
+[   38.635093]  128-byte region [ffff88800cab2200, ffff88800cab2280)
+[   38.636491] The buggy address belongs to the page:
+[   38.637068] page:00000000f3a74aff refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0xcab2
+[   38.638187] flags: 0x100000000000200(slab|node=0|zone=1)
+[   38.638848] raw: 0100000000000200 0000000000000000 dead000000000001 ffff8880078418c0
+[   38.639790] raw: 0000000000000000 0000000080100010 00000001ffffffff 0000000000000000
+[   38.640735] page dumped because: kasan: bad access detected
+[   38.641420]
+[   38.641627] Memory state around the buggy address:
+[   38.642221]  ffff88800cab2100: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[   38.643102]  ffff88800cab2180: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+[   38.643988] >ffff88800cab2200: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[   38.644869]                             ^
+[   38.645368]  ffff88800cab2280: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+[   38.646248]  ffff88800cab2300: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[   38.647148] ==================================================================
+[   38.648035] Disabling lock debugging due to kernel taint
+[   38.649781] bluetoothd[148]: src/device.c:load_gatt_db() Unable to load key file from /var/lib/bluetooth/00:1A:7D:DA:71:13/cache/)
+[   38.652103] bluetoothd[148]: src/device.c:load_gatt_db() No cache for 80:80:80:80:DD:01

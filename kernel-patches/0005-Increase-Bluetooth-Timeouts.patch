@@ -1,0 +1,43 @@
+From 47a683bcc93ceba770be0daebef577d27225e128 Mon Sep 17 00:00:00 2001
+From: Soenke Huster <shuster@seemoo.tu-darmstadt.de>
+Date: Thu, 16 Dec 2021 16:47:11 +0100
+Subject: [PATCH 5/7] Increase Bluetooth Timeouts
+
+---
+ include/net/bluetooth/hci.h | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/include/net/bluetooth/hci.h b/include/net/bluetooth/hci.h
+index 4a45c48eb0d2..b54da385abbf 100644
+--- a/include/net/bluetooth/hci.h
++++ b/include/net/bluetooth/hci.h
+@@ -367,16 +367,16 @@ enum {
+ };
+ 
+ /* HCI timeouts */
+-#define HCI_DISCONN_TIMEOUT	msecs_to_jiffies(2000)	/* 2 seconds */
+-#define HCI_PAIRING_TIMEOUT	msecs_to_jiffies(60000)	/* 60 seconds */
+-#define HCI_INIT_TIMEOUT	msecs_to_jiffies(10000)	/* 10 seconds */
+-#define HCI_CMD_TIMEOUT		msecs_to_jiffies(2000)	/* 2 seconds */
+-#define HCI_NCMD_TIMEOUT	msecs_to_jiffies(4000)	/* 4 seconds */
+-#define HCI_ACL_TX_TIMEOUT	msecs_to_jiffies(45000)	/* 45 seconds */
+-#define HCI_AUTO_OFF_TIMEOUT	msecs_to_jiffies(2000)	/* 2 seconds */
+-#define HCI_POWER_OFF_TIMEOUT	msecs_to_jiffies(5000)	/* 5 seconds */
+-#define HCI_LE_CONN_TIMEOUT	msecs_to_jiffies(20000)	/* 20 seconds */
+-#define HCI_LE_AUTOCONN_TIMEOUT	msecs_to_jiffies(4000)	/* 4 seconds */
++#define HCI_DISCONN_TIMEOUT	msecs_to_jiffies(900000)	/* 2 seconds */
++#define HCI_PAIRING_TIMEOUT	msecs_to_jiffies(900000)	/* 60 seconds */
++#define HCI_INIT_TIMEOUT	msecs_to_jiffies(900000)	/* 10 seconds */
++#define HCI_CMD_TIMEOUT		msecs_to_jiffies(900000)	/* 2 seconds */
++#define HCI_NCMD_TIMEOUT	msecs_to_jiffies(900000)	/* 4 seconds */
++#define HCI_ACL_TX_TIMEOUT	msecs_to_jiffies(900000)	/* 45 seconds */
++#define HCI_AUTO_OFF_TIMEOUT	msecs_to_jiffies(900000)	/* 2 seconds */
++#define HCI_POWER_OFF_TIMEOUT	msecs_to_jiffies(900000)	/* 5 seconds */
++#define HCI_LE_CONN_TIMEOUT	msecs_to_jiffies(900000)	/* 20 seconds */
++#define HCI_LE_AUTOCONN_TIMEOUT	msecs_to_jiffies(900000)	/* 4 seconds */
+ 
+ /* HCI data types */
+ #define HCI_COMMAND_PKT		0x01
+-- 
+2.37.1
+

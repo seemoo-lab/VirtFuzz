@@ -1,0 +1,9 @@
+[Unit]
+Description=Enable Bluetooth Scanning
+
+[Service]
+ExecStart=/bin/bash -c "echo 'Syzkaller BT service started' > /dev/kmsg; while true; do echo 'discoverable on' | bluetoothctl  > /dev/kmsg; echo 'pairable on' bluetoothctl > /dev/kmsg; echo 'scan on' bluetoothctl; sleep 5;  > /dev/kmsg; done;"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

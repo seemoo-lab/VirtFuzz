@@ -1,0 +1,25 @@
+[  250.098190] systemd-coredump[175]: Process 107 (systemd-journal) of user 0 dumped core.
+[  253.281647] systemd-coredump[175]: Module linux-vdso.so.1 with build-id 92096841f19ec8b96a5945f0486cb804b60e67ff
+[  253.291658] systemd-coredump[175]: Module libcap-ng.so.0 with build-id 707f9d3134a43306625e3dab8662899ea368ac91
+[  258.092604] systemd-coredump[175]: Module libpthread.so.0 with build-id 95ae4f30a6f12ccbff645d30f8e1a3ee23ec7d36
+[  258.101851] systemd-coredump[175]: Module libdl.so.2 with build-id 94198b268228074fa9f405bbedbbae94112593ed
+[  262.576428] systemd-coredump[175]: Module libz.so.1 with build-id fefe3219a96d682ec98fcfb78866b8594298b5a2
+[  262.585092] systemd-coredump[175]: Module libgpg-error.so.0 with build-id 4738b8a9478177c202cccd64e0eb65d3dea2bfae
+[  266.481326] systemd-coredump[175]: Module libm.so.6 with build-id 1b7296ef9fd806e47060788389293c824b09ad72
+[  266.491202] systemd-coredump[175]: Module liblzma.so.5 with build-id 28b40c7af8098a66af6ee093b6986b91cad7694d
+[  271.708955] systemd-coredump[175]: Module libseccomp.so.2 with build-id 898097fd5a5d3469526739a834457be46bebedc4
+[  271.716930] systemd-coredump[175]: Module libpam.so.0 with build-id bb11b2685fe89555938ffd330ea44d82b0f8701c
+ 274.733692] systemd-coredump[175]: Module libcrypto.so.1.1 with build-id d1f36af479cd3316f5ea2460b330fbe703587f12
+[  274.743976] systemd-coredump[175]: Module libmount.so.1 with build-id 4436aeea0cd8c01b5a77969e0531184f8b3513ce
+[  277.069890] systemd-coredump[175]: Module libkmod.so.2 with build-id 447e6072ef09d5e282332034705f86420c34e54e
+[  277.076921] systemd-coredump[175]: Module libip4tc.so.2 with build-id f7692f35fed32c9e2fdca2e2d03ed3e3978e7189
+.732599] systemd-coredump[175]: Module libcrypt.so.2 with build-id a0a45f81771945f0559d04e93726d245159930da
+[  278.742696] systemd-coredump[175]: Module libcap.so.2 with build-id 21b00ab76bb16fde56fd741f07233c78069f0579
+.037110] systemd-coredump[175]: Module libacl.so.1 with build-id 27869ed0219ade5d2ffd50eaee11f967187faa8b
+[  282.056128] systemd-coredump[175]: Module libc.so.6 with build-id 60df1df31f02a7b23da83e8ef923359885b81492
+] systemd-coredump[175]: Module libsystemd-shared-251.2-1.so with build-id a0a7f80be411cdd2f05dd233933372a92e897c35
+[  286.157502] systemd-coredump[175]: Module systemd-journald with build-id 838cc5095d8b922ecaa905bb7049f94d42923b48
+[  313.770731] systemd-coredump[175]: #1  0x00007f18a07742ed sd_event_prepare (libsystemd-shared-251.2-1.so + 0x2462ed)
+[  316.161583] systemd-coredump[175]: #3  0x00005591b5a3b84e n/a (systemd-journald + 0x784e)
+[  316.165653] systemd-coredump[175]: #4  0x00007f18a030f290 n/a (libc.so.6 + 0x29290)
+[  322.332386] systemd-coredump[175]: ELF object binary architecture: AMD x86-64

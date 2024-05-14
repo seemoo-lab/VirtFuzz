@@ -1,0 +1,10 @@
+[Unit]
+Description=Activate IBSS
+
+[Service]
+ExecStart=/bin/bash -c "iw wlan0 set type ibss; ip l set wlan0 up; iw wlan0 ibss join test 2412;"
+RemainAfterExit=true
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

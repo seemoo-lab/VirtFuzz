@@ -1,0 +1,9 @@
+[Unit]
+Description=Permanently scan for WiFi
+
+[Service]
+ExecStart=/bin/bash -c "ip l set wlan0 up && while true; do iw wlan0 scan; done;"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

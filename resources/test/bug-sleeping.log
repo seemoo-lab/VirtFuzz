@@ -1,0 +1,32 @@
+[    8.151622] BUG: sleeping function called from invalid context at kernel/locking/mutex.c:585
+[    8.155869] in_atomic(): 0, irqs_disabled(): 0, non_block: 0, pid: 48, name: kworker/u5:2
+[    8.160310] preempt_count: 0, expected: 0
+[    8.162456] RCU nest depth: 1, expected: 0
+[    8.164933] INFO: lockdep is turned off.
+[    8.167479] CPU: 0 PID: 48 Comm: kworker/u5:2 Tainted: G        W          6.9.0-rc5-00045-g7a56ae9ec37c-dirty #1
+[    8.171928] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+[    8.175456] Workqueue: hci0 hci_rx_work
+[    8.177078] Call Trace:
+[    8.178154]  <TASK>
+[    8.179165]  dump_stack_lvl+0x83/0xa0
+[    8.180699]  __might_resched+0x160/0x290
+[    8.182580]  __mutex_lock+0x50/0x4b0
+[    8.184302]  ? hci_le_create_big_complete_evt+0x1ca/0x7f0
+[    8.186323]  ? hci_cmd_sync_dequeue+0x163/0x180
+[    8.187286]  ? hci_le_create_big_complete_evt+0x1ca/0x7f0
+[    8.188327]  hci_le_create_big_complete_evt+0x1ca/0x7f0
+[    8.189324]  ? hci_le_create_big_complete_evt+0xc6/0x7f0
+[    8.190530]  ? __pfx_hci_le_create_big_complete_evt+0x10/0x10
+[    8.191811]  hci_le_meta_evt+0x159/0x240
+[    8.192936]  hci_event_packet+0x36a/0x870
+[    8.193808]  ? __pfx_hci_le_meta_evt+0x10/0x10
+[    8.194795]  hci_rx_work+0x71c/0xdf0
+[    8.195561]  process_one_work+0x21d/0x690
+[    8.197306]  worker_thread+0x190/0x370
+[    8.198103]  ? __pfx_worker_thread+0x10/0x10
+[    8.199018]  kthread+0xe4/0x110
+[    8.199679]  ? __pfx_kthread+0x10/0x10
+[    8.200457]  ret_from_fork+0x2f/0x50
+[    8.201223]  ? __pfx_kthread+0x10/0x10
+[    8.202976]  ret_from_fork_asm+0x1a/0x30
+[    8.204933]  </TASK>

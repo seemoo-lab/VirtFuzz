@@ -1,0 +1,8 @@
+{
+  "virtio_id": 40,
+  "virtqueue_num": 2,
+  "virtqueue_tx": 0,
+  "virtqueue_rx": 1,
+  "features": [],
+  "config": "000000FF"
+}

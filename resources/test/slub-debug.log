@@ -1,0 +1,36 @@
+[    5.655013] audit: type=1130 audit(1663069631.322:29): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=kernel msg='unit=systemd-hostnamed comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    5.769122] audit: type=1130 audit(1663069631.436:30): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=kernel msg='unit=NetworkManager-dispatcher comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    5.788840] audit: type=1130 audit(1663069631.455:31): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=kernel msg='unit=wpa_supplicant comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    5.895154] audit: type=1131 audit(1663069631.562:32): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=kernel msg='unit=shadow comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[    6.243886] =============================================================================
+[    6.246011] BUG kmalloc-64 (Not tainted): Right Redzone overwritten
+[    6.247163] -----------------------------------------------------------------------------
+[    6.247163] 
+[    6.248795] 0xffff88800de69480-0xffff88800de69487 @offset=1152. First byte 0x10 instead of 0xcc
+[    6.250304] Allocated in 0xe0004000e0004 age=18445618109377643519 cpu=1048580 pid=262148
+[    6.251696] ------------[ cut here ]------------
+[    6.252589] slab index 917507 out of bounds (105) for stack id 000e0003
+[    6.253909] WARNING: CPU: 0 PID: 13 at lib/stackdepot.c:366 stack_depot_print+0x60/0x70
+[    6.255447] Modules linked in:
+[    6.256064] CPU: 0 PID: 13 Comm: ksoftirqd/0 Not tainted 6.0.0-rc1-13731-g918aeb805803-dirty #7
+[    6.257729] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+[    6.259909] RIP: 0010:stack_depot_print+0x60/0x70
+[    6.260835] Code: 00 00 48 01 c2 8b 72 0c 48 8d 7a 18 85 f6 74 07 31 d2 e9 b3 63 bc ff c3 cc cc cc cc 89 f9 48 c7 c7 a0 c7 a1 82 e8 2a c3 b5 00 <0f> 0b c3 cc cc cc cc 66 0f 1f 84 00 00 00 00 00 89 f8 49 89 f1 48
+[    6.264364] RSP: 0018:ffffc90000073998 EFLAGS: 00010086
+[    6.265378] RAX: 0000000000000000 RBX: ffff8880044417c0 RCX: 0000000000000000
+[    6.266770] RDX: 0000000000000304 RSI: ffffffff829e97f1 RDI: 00000000ffffffff
+[    6.268139] RBP: ffff88800de69440 R08: 0000000000000000 R09: ffffc90000073838
+[    6.269516] R10: 0000000000000003 R11: ffffffff82d54b28 R12: ffff88800de69490
+[    6.270867] R13: 00000000fffb840f R14: ffffea0000379a40 R15: ffff88800de69488
+[    6.272222] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
+[    6.273769] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    6.274848] CR2: 000056221cea3fa0 CR3: 0000000007f48000 CR4: 00000000000006f0
+[    6.276228] Call Trace:
+[    6.276726]  <TASK>
+[    6.277164]  print_tracking.cold+0x9b/0x9d
+[    6.277994]  print_trailer+0x30/0x134
+[    6.278652]  check_bytes_and_report.cold+0x6d/0x97
+[    6.279512]  check_object+0x18b/0x260
+[    6.280196]  free_debug_processing+0x176/0x370
+[    6.280928]  ? cfg80211_inform_bss_frame_data+0x43f/0x540
+[    6.281805]  __slab_free+0x15a/0x380

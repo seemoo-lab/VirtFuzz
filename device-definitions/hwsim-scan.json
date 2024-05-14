@@ -1,0 +1,9 @@
+{
+  "virtio_id": 29,
+  "virtqueue_num": 2,
+  "virtqueue_tx": 0,
+  "virtqueue_rx": 1,
+  "features": [],
+  "config": "ABCDEF001122",
+  "command_line_params": ["mac80211_hwsim.radios=1", "systemd.wants=permanent-scan.service", "systemd.wants=NetworkManager.service"]
+}

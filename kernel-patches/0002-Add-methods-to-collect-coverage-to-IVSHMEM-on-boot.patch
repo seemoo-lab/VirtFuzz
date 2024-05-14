@@ -1,0 +1,242 @@
+From d036457cf52ee7c909b60dc303f119879e987a5e Mon Sep 17 00:00:00 2001
+From: Soenke Huster <shuster@seemoo.tu-darmstadt.de>
+Date: Mon, 11 Jul 2022 15:16:21 +0200
+Subject: [PATCH 2/3] Store kcov coverage on ivshmem device
+
+---
+ kernel/kcov.c | 198 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 198 insertions(+)
+
+diff --git a/kernel/kcov.c b/kernel/kcov.c
+index e5cd09fd8a05..b16a68678183 100644
+--- a/kernel/kcov.c
++++ b/kernel/kcov.c
+@@ -25,6 +25,7 @@
+ #include <linux/refcount.h>
+ #include <linux/log2.h>
+ #include <asm/setup.h>
++#include <linux/moduleparam.h>
+
+ #define kcov_debug(fmt, ...) pr_debug("%s: " fmt, __func__, ##__VA_ARGS__)
+
+@@ -192,6 +193,14 @@ static notrace unsigned long canonicalize_ip(unsigned long ip)
+ 	return ip;
+ }
+
++static bool cmp_mode;
++module_param(cmp_mode, bool, 0);
++
++void notrace kcov_rewind(unsigned long *area) {
++	pr_err("kcov: area is full, rewind");
++	WRITE_ONCE(area[0], 0);
++}
++
+ /*
+  * Entry point from instrumented code.
+  * This is called once per basic-block/edge.
+@@ -1055,6 +1064,190 @@ u64 kcov_common_handle(void)
+ }
+ EXPORT_SYMBOL(kcov_common_handle);
+
++extern void * notrace ivshmem_kcov_area(unsigned int *size);
++
++/* Kcov-Ivshmem Start
++ *
++ * Adapted kcov_remote_start()
++ *
++ */
++void kcov_noop(void) {
++	unsigned long *area;
++	unsigned int size;
++	unsigned long pos;
++	unsigned long count;
++
++
++	area = ivshmem_kcov_area(&size);
++	if(area <= 0 || size <= 0) {
++		pr_err("kcov: ivshmem not yet initialized");
++		return;
++	}
++
++
++	/* The first 64-bit word is the number of subsequent PCs. */
++	if(cmp_mode) {
++		count = READ_ONCE(area[0]);
++		pos = count * KCOV_WORDS_PER_CMP + 1;
++		if (likely(pos + 2 * KCOV_WORDS_PER_CMP < size)) {
++			WRITE_ONCE(area[0], count + 2);
++			barrier();
++			area[pos + 3] = 0xbeefdead;
++			area[pos + 3 + KCOV_WORDS_PER_CMP] = 0xdeadbeef;
++		}
++
++	} else {
++		// Write delimiter
++		pos = READ_ONCE(area[0]) + 1;
++		if (likely(pos + 1 < size)) {
++			WRITE_ONCE(area[0], pos + 1);
++			barrier();
++			area[pos] = 0xbeefdead;
++			area[pos + 1] = 0xdeadbeef;
++		}
++	}
++
++}
++EXPORT_SYMBOL(kcov_noop);
++
++void kcov_ivshmem_write_barrier(struct task_struct *t, unsigned long delimiter) {
++	unsigned long *area;
++	unsigned long pos, count;
++
++	area = t->kcov_area;
++	pos = READ_ONCE(area[0]);
++	if(unlikely(pos + 3 >= t->kcov_size)) {
++		kcov_rewind(area);
++		pos = 0;
++	}
++
++	if(!cmp_mode) {
++		pos += 1;
++		/* The first 64-bit word is the number of subsequent PCs. */
++		if (likely(pos < t->kcov_size)) {
++			WRITE_ONCE(area[0], pos);
++			barrier();
++			area[pos] = delimiter;
++		}
++	} else {
++		WRITE_ONCE(area[0], pos + 1);
++		barrier();
++		count = pos;
++		pos = count * KCOV_WORDS_PER_CMP + 1;
++		area[pos + 3] = delimiter;
++	}
++}
++
++void inner_kcov_ivshmem_start(int write_barrier)
++{
++	struct task_struct *t;
++	unsigned int mode;
++	unsigned long flags;
++	unsigned long *area;
++	unsigned int size;
++
++	if (!in_task() && !in_serving_softirq()) {
++		pr_err("kcov_ivshmem_start called outside IRQ or task");
++		return;
++	}
++
++	t = current;
++
++	local_lock_irqsave(&kcov_percpu_data.lock, flags);
++
++	/*
++	 * Check that kcov_ivshmem_start() is not called twice in background
++	 * threads nor called by user tasks (with enabled kcov).
++	 */
++	mode = READ_ONCE(t->kcov_mode);
++	if (WARN_ON(in_task() && kcov_mode_enabled(mode))) {
++		pr_err("kcov: Called twice in background thread");
++		local_irq_restore(flags);
++		return;
++	}
++
++	area = ivshmem_kcov_area(&size);
++	if(area <= 0 || size <= 0) {
++		pr_err("kcov: ivshmem not yet initialized");
++		local_irq_restore(flags);
++		return;
++	}
++
++	t = current;
++	t->kcov_area = area;
++	t->kcov_size = size;
++	barrier();
++	if(!cmp_mode) {
++		WRITE_ONCE(t->kcov_mode, KCOV_MODE_TRACE_PC);
++	} else {
++		WRITE_ONCE(t->kcov_mode, KCOV_MODE_TRACE_CMP);
++	}
++
++	if(in_serving_softirq()) {
++		t->kcov_softirq = 1;
++	}
++
++	// When we are close at the end, start at beginning
++	if(area[0] > size - 400) {
++		kcov_rewind(area);
++	}
++
++	if (write_barrier) {
++		kcov_ivshmem_write_barrier(t, 0xbeefdead);
++	}
++
++	local_unlock_irqrestore(&kcov_percpu_data.lock, flags);
++}
++
++void kcov_ivshmem_start(void) {
++	inner_kcov_ivshmem_start(1);
++}
++EXPORT_SYMBOL(kcov_ivshmem_start);
++
++void kcov_ivshmem_start_nobarrier(void) {
++	inner_kcov_ivshmem_start(0);
++}
++EXPORT_SYMBOL(kcov_ivshmem_start_nobarrier);
++
++void inner_kcov_ivshmem_stop(int write_barrier)
++{
++	struct task_struct *t = current;
++	unsigned long flags;
++	unsigned int mode;
++
++	if (!in_task() && !in_serving_softirq())
++		return;
++
++	local_lock_irqsave(&kcov_percpu_data.lock, flags);
++
++	mode = READ_ONCE(t->kcov_mode);
++	barrier();
++	if (!kcov_mode_enabled(mode)) {
++		local_unlock_irqrestore(&kcov_percpu_data.lock, flags);
++		return;
++	}
++
++	if(write_barrier) {
++		kcov_ivshmem_write_barrier(t, 0xdeadbeef);
++	}
++	kcov_stop(t);
++	if (in_serving_softirq()) {
++		t->kcov_softirq = 0;
++	}
++	local_unlock_irqrestore(&kcov_percpu_data.lock, flags);
++}
++
++void kcov_ivshmem_stop_nobarrier(void) {
++	inner_kcov_ivshmem_stop(0);
++}
++EXPORT_SYMBOL(kcov_ivshmem_stop_nobarrier);
++
++void kcov_ivshmem_stop(void)
++{
++	inner_kcov_ivshmem_stop(1);
++}
++EXPORT_SYMBOL(kcov_ivshmem_stop);
++
+ static int __init kcov_init(void)
+ {
+ 	int cpu;
+@@ -1074,6 +1267,11 @@ static int __init kcov_init(void)
+ 	 */
+ 	debugfs_create_file_unsafe("kcov", 0600, NULL, NULL, &kcov_fops);
+
++	if(cmp_mode) {
++		printk("kcov uses cmp_mode");
++	} else {
++		printk("kcov uses map_mode");
++	}
+ 	return 0;
+ }
+
+--
+2.38.1
+

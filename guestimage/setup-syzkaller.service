@@ -1,0 +1,10 @@
+[Unit]
+Description=Activate Syzkaller IBSS setup
+
+[Service]
+ExecStart=/root/setup-syzkaller-hwsim.sh
+RemainAfterExit=true
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

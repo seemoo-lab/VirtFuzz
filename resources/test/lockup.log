@@ -1,0 +1,57 @@
+[   33.553761] watchdog: BUG: soft lockup - CPU#0 stuck for 26s! [swapper/0:1]
+[   33.553761] Modules linked in:
+[   33.553761] irq event stamp: 1141888
+[   33.553761] hardirqs last  enabled at (1141887): [<ffffffff83c00ccb>] asm_sysvec_apic_timer_interrupt+0x1b/0x20
+[   33.553761] hardirqs last disabled at (1141888): [<ffffffff83b78f2b>] sysvec_apic_timer_interrupt+0xb/0xc0
+[   33.553761] softirqs last  enabled at (1141744): [<ffffffff811417cc>] __irq_exit_rcu+0x11c/0x180
+[   33.553761] softirqs last disabled at (1141735): [<ffffffff811417cc>] __irq_exit_rcu+0x11c/0x180
+[   33.553761] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 5.18.0-03868-gd4abd165ff51 #44
+[   33.553761] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0-0-g155821a1990b-prebuilt.qemu.org 04/01/2014
+[   33.553761] RIP: 0010:memset_orig+0x33/0xb0
+[   33.553761] Code: 01 01 01 01 01 01 01 01 48 0f af c1 41 89 f9 41 83 e1 07 75 70 48 89 d1 48 c1 e9 06 74 39 66 0f 1f 84 00 00 00 00 00 48 ff c9 <48> 89 07 48 89 47 08 48 89 47 10 48 89 47 18 48 89 47 20 48 89 47
+[   33.553761] RSP: 0000:ffffc9000001fae8 EFLAGS: 00010216
+[   33.553761] RAX: 0000000000000000 RBX: 00000000e0000000 RCX: 0000000000359a3f
+[   33.553761] RDX: 0000000010000000 RSI: 0000000000000000 RDI: ffffc90012997000
+[   33.553761] RBP: ffff888007bc0000 R08: 0000000000000001 R09: 0000000000000000
+[   33.553761] R10: ffffc90010000000 R11: 0000000000000001 R12: 0000000000000000
+[   33.553761] R13: ffff888007bc00c8 R14: ffff888007bc0078 R15: ffff888007bc04b0
+[   33.553761] FS:  0000000000000000(0000) GS:ffff88806d000000(0000) knlGS:0000000000000000
+[   33.553761] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   33.553761] CR2: ffff888006801000 CR3: 0000000004a26000 CR4: 00000000000006f0
+[   33.553761] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   33.553761] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   33.553761] Call Trace:
+[   33.553761]  <TASK>
+[   33.553761]  kvm_ivshmem_probe_device+0xd2/0x120
+[   33.553761]  ? ivshmem_kcov_area+0x60/0x60
+[   33.553761]  local_pci_probe+0xd4/0x160
+[   33.553761]  pci_device_probe+0x1f2/0x4a0
+[   33.553761]  ? kernfs_add_one+0x2fe/0x480
+[   33.553761]  ? pci_device_remove+0x1c0/0x1c0
+[   33.553761]  ? kernfs_create_link+0x167/0x220
+[   33.553761]  ? do_raw_spin_unlock+0x4f/0x210
+[   33.553761]  ? kernfs_put+0x13/0x30
+[   33.553761]  ? sysfs_do_create_link_sd+0x87/0xf0
+[   33.553761]  really_probe.part.0+0x1a8/0x5e0
+[   33.553761]  __driver_probe_device+0x219/0x2b0
+[   33.553761]  driver_probe_device+0x48/0x210
+[   33.553761]  __driver_attach+0x1cd/0x480
+[   33.553761]  ? __device_attach_driver+0x2f0/0x2f0
+[   33.553761]  bus_for_each_dev+0x11c/0x1a0
+[   33.553761]  ? lockdep_init_map_type+0x2c3/0x7a0
+[   33.553761]  ? subsys_dev_iter_exit+0x10/0x10
+[   33.553761]  bus_add_driver+0x3c5/0x4f0
+[   33.553761]  driver_register+0x20a/0x380
+[   33.553761]  ? __pci_register_driver+0x193/0x280
+[   33.553761]  ? hid_init+0x59/0x59
+[   33.553761]  kvm_ivshmem_init_module+0x15/0x1d
+[   33.553761]  do_one_initcall+0xb7/0x400
+[   33.553761]  ? trace_event_raw_event_initcall_level+0x190/0x190
+[   33.553761]  ? parameq+0xd0/0xd0
+[   33.553761]  ? lock_is_held_type+0xd7/0x130
+[   33.553761]  ? lock_is_held_type+0xd7/0x130
+[   33.553761]  kernel_init_freeable+0x539/0x597
+[   33.553761]  ? rest_init+0x1e0/0x1e0
+[   33.553761]  kernel_init+0x14/0x130
+[   33.553761]  ret_from_fork+0x22/0x30
+[   33.553761]  </TASK>

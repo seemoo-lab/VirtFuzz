@@ -1,0 +1,25 @@
+[    6.597374] Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(8,0)
+[    6.597455] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 5.19.0-rc8-00905-gff48acb20bf6 #2
+[    6.597455] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+[    6.597455] Call Trace:
+[    6.597455]  <TASK>
+[    6.597455]  dump_stack_lvl+0x45/0x5d
+[    6.597455]  panic+0x1f0/0x441
+[    6.597455]  ? panic_print_sys_info.part.0+0x6d/0x6d
+[    6.597455]  mount_block_root+0x2a7/0x2bd
+[    6.597455]  ? init_rootfs+0x32/0x32
+[    6.597455]  ? rcu_read_lock_sched_held+0x3e/0x80
+[    6.597455]  ? memcpy+0x39/0x60
+[    6.597455]  mount_root+0x26a/0x2b0
+[    6.597455]  ? lock_is_held_type+0xd7/0x130
+[    6.597455]  ? mount_block_root+0x2bd/0x2bd
+[    6.597455]  ? rcu_read_lock_sched_held+0x3e/0x80
+[    6.597455]  ? memcpy+0x39/0x60
+[    6.597455]  prepare_namespace+0x136/0x165
+[    6.597455]  kernel_init_freeable+0x583/0x596
+[    6.597455]  ? rest_init+0x1e0/0x1e0
+[    6.597455]  kernel_init+0x14/0x140
+[    6.597455]  ret_from_fork+0x22/0x30
+[    6.597455]  </TASK>
+[    6.597455] Kernel Offset: disabled
+[    6.597455] ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(8,0) ]---
