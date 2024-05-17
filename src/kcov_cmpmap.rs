@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use libafl::bolts::tuples::Named;
+use libafl_bolts::Named;
 use libafl::executors::ExitKind;
 use libafl::inputs::UsesInput;
 use libafl::observers::{CmpMap, CmpObserver, CmpValues, Observer};
-use libafl::state::{HasMetadata};
+use libafl::common::{HasMetadata};
 use libafl::Error;
+use libafl::prelude::CmpValuesMetadata;
 use log::{error, trace};
 use serde::{Deserialize, Serialize};
 
@@ -169,7 +170,7 @@ impl Named for KcovCmpMapObserver {
 impl<S> Observer<S> for KcovCmpMapObserver
 where
     S: HasMetadata + UsesInput,
-    Self: CmpObserver<KcovCmpMap, S>,
+    Self: for<'a> CmpObserver<'a, KcovCmpMap, S, CmpValuesMetadata>,
 {
     fn pre_exec(&mut self, _state: &mut S, _input: &<S as UsesInput>::Input) -> Result<(), Error> {
         self.map.reset()?;
@@ -192,7 +193,7 @@ where
     }
 }
 
-impl<S> CmpObserver<KcovCmpMap, S> for KcovCmpMapObserver
+impl<S> CmpObserver<'_, KcovCmpMap, S, CmpValuesMetadata> for KcovCmpMapObserver
 where
     S: HasMetadata + UsesInput,
 {

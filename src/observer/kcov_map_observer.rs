@@ -1,9 +1,9 @@
 use ahash::AHasher;
-use libafl::bolts::tuples::Named;
-use libafl::bolts::{AsIter, AsMutSlice, AsSlice, HasLen};
+use libafl_bolts::Named;
+use libafl_bolts::{AsIter, AsMutSlice, AsSlice, HasLen};
 use libafl::executors::ExitKind;
 use libafl::observers::{MapObserver, Observer};
-use libafl::prelude::OwnedMutSlice;
+use libafl_bolts::prelude::OwnedMutSlice;
 use libafl::prelude::UsesInput;
 use libafl::Error;
 use log::{debug, error, info, trace, warn};
@@ -92,6 +92,7 @@ impl<'a> KcovMapObserver<'a> {
         Some(self.unique_coverage.clone())
     }
 
+    #[cfg(feature = "dump-invalid-coverage")]
     fn dump_coverage(&self, reason: &str) {
         for i in 0..100 {
             let p = PathBuf::from(format!("coverage-dump-{:02}", i));
@@ -140,6 +141,7 @@ impl<'a> KcovMapObserver<'a> {
                         "Did the input run? No coverage recorded, but exited as OK with pos={}",
                         max_pos
                     );
+                    #[cfg(feature = "dump-invalid-coverage")]
                     self.dump_coverage("did-run");
                 }
 
@@ -176,6 +178,7 @@ impl<'a> KcovMapObserver<'a> {
                                 break;
                             } else if ip == 0xdeadbeef {
                                 error!("Assumed being InFrame, but frame start detected");
+                                #[cfg(feature = "dump-invalid-coverage")]
                                 self.dump_coverage(&format!(
                                     "inframe-but-deadbeef at pos={} with initial {:?}",
                                     i, initial_frame_pos
@@ -189,6 +192,7 @@ impl<'a> KcovMapObserver<'a> {
                                 continue;
                             } else if ip == 0xbeefdead {
                                 error!("Assumed being OutFrame, but frame start detected");
+                                #[cfg(feature = "dump-invalid-coverage")]
                                 self.dump_coverage(&format!(
                                     "outframe-but-beefdead at pos={} with initial {:?}",
                                     i, initial_frame_pos
@@ -273,6 +277,18 @@ impl<'a, S: UsesInput> Observer<S> for KcovMapObserver<'a> {
     }
 }
 
+impl<'a> AsRef<Self> for KcovMapObserver<'a> {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
+impl<'a> AsMut<Self> for KcovMapObserver<'a> {
+    fn as_mut(&mut self) -> &mut Self {
+        self
+    }
+}
+
 impl<'a> MapObserver for KcovMapObserver<'a> {
     type Entry = u8;
 
@@ -302,7 +318,7 @@ impl<'a> MapObserver for KcovMapObserver<'a> {
     }
 
     fn hash(&self) -> u64 {
-        let mut hasher = AHasher::new_with_keys(0, 0);
+        let mut hasher = AHasher::default();
         hasher.write(self.map.as_slice());
         hasher.finish()
     }
@@ -379,7 +395,7 @@ impl<'a> AsMutSlice for KcovMapObserver<'a> {
 #[cfg(test)]
 mod test {
     use crate::observer::kcov_map_observer::{KcovFramePosition, KcovMapObserver};
-    use libafl::bolts::rands::StdRand;
+    use libafl_bolts::rands::StdRand;
     use libafl::corpus::InMemoryCorpus;
     use libafl::executors::ExitKind;
     use libafl::inputs::BytesInput;

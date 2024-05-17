@@ -1,14 +1,14 @@
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 
-use libafl::bolts::tuples::Named;
+use libafl_bolts::Named;
 use libafl::corpus::Testcase;
 use libafl::events::EventFirer;
 use libafl::feedbacks::Feedback;
 
 use libafl::observers::ObserversTuple;
-use libafl::prelude::{Event, UserStats, UsesInput};
-use libafl::state::{HasClientPerfMonitor, HasMetadata, HasNamedMetadata};
+use libafl::prelude::{AggregatorOps, Event, UserStats, UserStatsValue, UsesInput};
+use libafl::common::{HasNamedMetadata, HasMetadata};
 use libafl::Error;
 use libafl::SerdeAny;
 use serde::{Deserialize, Serialize};
@@ -66,10 +66,10 @@ impl Named for UniqueBacktraceFeedback {
 
 impl<S> Feedback<S> for UniqueBacktraceFeedback
 where
-    S: UsesInput + HasClientPerfMonitor + HasNamedMetadata,
+    S: UsesInput + HasNamedMetadata + libafl::state::State,
 {
     fn init_state(&mut self, state: &mut S) -> Result<(), Error> {
-        state.add_named_metadata(BacktraceFeedbackMetadata::new(), &self.name);
+        state.add_named_metadata(&self.name, BacktraceFeedbackMetadata::new());
         Ok(())
     }
 
@@ -107,7 +107,7 @@ where
                         state,
                         Event::UpdateUserStats {
                             name: "obj_identifier".to_string(),
-                            value: UserStats::String(self.crash_ident.as_ref().unwrap().clone()),
+                            value: UserStats::new(UserStatsValue::String(self.crash_ident.as_ref().unwrap().clone()), AggregatorOps::None),
                             phantom: Default::default(),
                         },
                     )
@@ -118,7 +118,7 @@ where
                 }
 
                 let crashes_state = state
-                    .named_metadata_mut()
+                    .named_metadata_map_mut()
                     .get_mut::<BacktraceFeedbackMetadata>(self.name())
                     .unwrap();
 
@@ -138,11 +138,14 @@ where
         Ok(true)
     }
 
-    fn append_metadata(
+    fn append_metadata<EM, OT>(
         &mut self,
         _state: &mut S,
+        _: &mut EM,
+        _observers: &OT,
         testcase: &mut Testcase<<S as UsesInput>::Input>,
-    ) -> Result<(), Error> {
+    )  -> Result<(), Error>
+        where EM: EventFirer<State = S>, OT: ObserversTuple<S>, {
         testcase.add_metadata(BacktraceMetadata {
             log: match &self.log {
                 Some(log) => log.clone(),
@@ -174,4 +177,4 @@ pub struct BacktraceMetadata {
     pub crash_ident: String,
 }
 
-libafl::impl_serdeany!(BacktraceMetadata);
+libafl_bolts::impl_serdeany!(BacktraceMetadata);

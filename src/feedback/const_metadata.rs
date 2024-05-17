@@ -1,12 +1,12 @@
-use libafl::bolts::serdeany::SerdeAny;
-use libafl::bolts::tuples::Named;
+use libafl_bolts::serdeany::SerdeAny;
+use libafl_bolts::Named;
 use libafl::corpus::Testcase;
 use libafl::events::EventFirer;
 use libafl::feedbacks::Feedback;
 
 use libafl::observers::ObserversTuple;
 use libafl::prelude::UsesInput;
-use libafl::state::{HasClientPerfMonitor, HasMetadata};
+use libafl::common::{HasMetadata};
 use libafl::Error;
 
 #[derive(Debug, Clone)]
@@ -50,7 +50,7 @@ where
 
 impl<S, M> Feedback<S> for ConstMetadataFeedback<M>
 where
-    S: UsesInput + HasClientPerfMonitor,
+    S: UsesInput + libafl::state::State,
     M: SerdeAny + Clone,
 {
     fn is_interesting<EM, OT>(
@@ -68,11 +68,14 @@ where
         Ok(self.is_interesting)
     }
 
-    fn append_metadata(
+    fn append_metadata<EM, OT>(
         &mut self,
         _state: &mut S,
+        _: &mut EM,
+        _observers: &OT,
         testcase: &mut Testcase<<S as UsesInput>::Input>,
-    ) -> Result<(), Error> {
+    )  -> Result<(), Error>
+        where EM: EventFirer<State = S>, OT: ObserversTuple<S>, {
         testcase.add_metadata(self.metadata.clone());
 
         Ok(())

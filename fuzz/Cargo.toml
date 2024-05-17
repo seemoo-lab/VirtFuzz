@@ -7,7 +7,8 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.1.1", features = ["derive", "env"] }
-libafl = { version = "0.9.0" }
+libafl = { version = "0.12.0", features = ["serdeany_autoreg"] }
+libafl_bolts = "0.12.0"
 virtfuzz = {path = ".."}
 log = "0.4.17"
 simplelog = "0.12.0"

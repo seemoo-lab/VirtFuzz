@@ -2,8 +2,9 @@ use crate::observer::kcov_map_observer::KcovMapObserver;
 use libafl::events::{Event, EventFirer};
 use libafl::executors::ExitKind;
 use libafl::observers::ObserversTuple;
-use libafl::prelude::{Feedback, HasClientPerfMonitor, Named, UserStats, UsesInput};
-use libafl::{impl_serdeany, Error};
+use libafl::prelude::{AggregatorOps, Feedback, UserStats, UserStatsValue, UsesInput};
+use libafl::{Error};
+use libafl_bolts::{impl_serdeany, Named};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -32,7 +33,7 @@ impl<const R: bool> Named for CoverageStatisticFeedback<R> {
 
 impl<const R: bool, S> Feedback<S> for CoverageStatisticFeedback<R>
 where
-    S: UsesInput + HasClientPerfMonitor,
+    S: UsesInput + libafl::state::State,
 {
     fn is_interesting<EM, OT>(
         &mut self,
@@ -52,7 +53,7 @@ where
                     state,
                     Event::UpdateUserStats {
                         name: self.name.clone(),
-                        value: UserStats::Number((*covered.lock().unwrap()) as u64),
+                        value: UserStats::new(UserStatsValue::Number((*covered.lock().unwrap()) as u64), AggregatorOps::Max),
                         phantom: PhantomData,
                     },
                 )

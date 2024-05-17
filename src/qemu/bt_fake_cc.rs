@@ -12,7 +12,7 @@ const HCI_OP_ACCEPT_CONN_REQ: u16 = 0x0409;
 pub(crate) fn fake_bluetooth_command_complete(conn: &UnixSeqpacketConn) -> Vec<Vec<u8>> {
         let mut result = Vec::new();
             let mut buffer = [0_u8; 500];
-            while let Ok((size, _)) = conn.recv(&mut buffer) {
+            while let Ok(size) = conn.recv(&mut buffer) {
                 if size < 1 {
                     info!("Received Frame has size {size}");
                     continue;
@@ -37,8 +37,8 @@ pub(crate) fn fake_bluetooth_command_complete(conn: &UnixSeqpacketConn) -> Vec<V
                     }
                     HCI_OP_READ_BD_ADDR => {
                         let mut response = [0_u8; 7];
-                        for i in 1..7 {
-                            response[i] = 0xaa;
+                        for i in response.iter_mut().skip(1) {
+                            *i = 0xaa;
                         }
                         send_cmd_complete( HCI_OP_READ_BD_ADDR, &response)
                     }

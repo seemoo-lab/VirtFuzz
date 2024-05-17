@@ -88,7 +88,7 @@ impl Iterator for DmesgReader {
                     Ok(str) => {
                         self.buffer_pos = i + 2;
                         self.content.push(str.to_string());
-                        trace!("{}", str.trim_end_matches("\n"));
+                        trace!("{}", str.trim_end_matches('\n'));
                         return Some(str.to_string());
                     }
                     Err(e) => {

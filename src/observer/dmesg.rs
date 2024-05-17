@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use libafl::bolts::tuples::Named;
+use libafl_bolts::Named;
 use libafl::inputs::UsesInput;
 use libafl::observers::Observer;
 

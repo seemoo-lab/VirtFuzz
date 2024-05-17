@@ -1,16 +1,17 @@
 extern crate core;
 
 use clap::{Parser, ValueEnum};
-use libafl::bolts::core_affinity::Cores;
-use libafl::bolts::launcher::Launcher;
-use libafl::bolts::rands::StdRand;
-use libafl::bolts::shmem::{ShMemProvider, StdShMemProvider};
-use libafl::bolts::tuples::tuple_list;
-use libafl::bolts::tuples::Named;
-use libafl::bolts::{current_nanos, current_time};
+use libafl_bolts::core_affinity::Cores;
+use libafl::prelude::{AggregatorOps, Launcher, UserStatsValue};
+use libafl_bolts::prelude::RomuDuoJrRand;
+use libafl_bolts::rands::StdRand;
+use libafl_bolts::shmem::{ShMemProvider, StdShMemProvider};
+use libafl_bolts::tuples::tuple_list;
+use libafl_bolts::Named;
+use libafl_bolts::{current_nanos, current_time};
 #[cfg(feature = "minimizer")]
 use libafl::corpus::{CorpusMinimizer, StdCorpusMinimizer};
-use libafl::corpus::{CachedOnDiskCorpus, Corpus, OnDiskCorpus};
+use libafl::corpus::{InMemoryOnDiskCorpus, Corpus, CachedOnDiskCorpus};
 use libafl::events::EventConfig;
 use libafl::events::EventManager;
 use libafl::events::SimpleEventManager;
@@ -26,11 +27,8 @@ use libafl::mutators::{
     havoc_mutations, I2SRandReplace, StdScheduledMutator,
 };
 use libafl::observers::HitcountsMapObserver;
-use libafl::prelude::{
-    CombinedFeedback, Event, Generator, HasTargetBytes, Input, LogicEagerOr, LogicFastAnd,
-    MapFeedback, MaxReducer, NopMonitor, NotFeedback, UserStats, UsesState,
-};
-use libafl::prelude::HasLen;
+use libafl::prelude::{CombinedFeedback, Event, Generator, HasTargetBytes, Input, LogicEagerOr, LogicFastAnd, MapFeedback, MaxReducer, NopMonitor, NotFeedback, UserStats, UsesState};
+use libafl_bolts::HasLen;
 use libafl::schedulers::RandScheduler;
 use libafl::stages::{StdMutationalStage, TracingStage};
 use libafl::state::{HasCorpus, StdState};
@@ -334,17 +332,17 @@ fn main() {
     }
 }
 
-fn log(msg: String) {
+fn log(msg: &str) {
     println!("{}", msg);
 }
 
-type HarnessState<I> = StdState<I, CachedOnDiskCorpus<I>, StdRand, OnDiskCorpus<I>>;
+type HarnessState<I> = StdState<I, InMemoryOnDiskCorpus<I>, StdRand, CachedOnDiskCorpus<I>>;
 
 struct HarnessBuilder<I, G, F, FG>
 where
     I: Input + HasTargetBytes + HasBytesVec + HasLen,
     G: Generator<I, HarnessState<I>>,
-    F: FnMut(String),
+    F: FnMut(&str),
     FG: Fn() -> G,
 {
     qemu: QemuSystemBuilder,
@@ -359,7 +357,7 @@ impl<I, G, F, FG> HarnessBuilder<I, G, F, FG>
 where
     I: Input + HasTargetBytes + HasBytesVec + HasLen,
     G: Generator<I, HarnessState<I>>,
-    F: FnMut(String) + Clone,
+    F: FnMut(&str) + Clone,
     FG: Fn() -> G,
 {
     pub fn create(cli: &Cli, device: DeviceConfiguration, create_generator: FG) -> Self {
@@ -459,7 +457,7 @@ where
             .shmem_provider(shmem)
             .configuration(EventConfig::AlwaysUnique)
             .broker_port(self.cli.port)
-            .run_client(|s, m, c| self.run_client(s, m, c))
+            .run_client(|s, m, c| self.run_client(s, m, c.0))
             .cores(&self.cores)
             .spawn_broker(!self.cli.client)
             .monitor(monitor)
@@ -515,6 +513,7 @@ where
                             NotFeedback<TimeoutFeedback, HarnessState<I>>,
                             CombinedFeedback<
                                 MapFeedback<
+                                    HitcountsMapObserver<KcovMapObserver<'a>>,
                                     DifferentIsNovel,
                                     HitcountsMapObserver<KcovMapObserver<'a>>,
                                     MaxReducer,
@@ -541,6 +540,7 @@ where
                         CombinedFeedback<
                             CombinedFeedback<
                                 MapFeedback<
+                                    HitcountsMapObserver<KcovMapObserver<'a>>,
                                     DifferentIsNovel,
                                     HitcountsMapObserver<KcovMapObserver<'a>>,
                                     MaxReducer,
@@ -568,7 +568,7 @@ where
                         (DmesgObserver, ()),
                     ),
                 >,
-            > + libafl::events::EventProcessor<virtfuzz::qemu::executor::StdQemuExecutor<libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>, (libafl::observers::HitcountsMapObserver<virtfuzz::observer::kcov_map_observer::KcovMapObserver<'a>>, (virtfuzz::observer::dmesg::DmesgObserver, ()))>, libafl::StdFuzzer<libafl::schedulers::RandScheduler<libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::NotFeedback<libafl::feedbacks::CrashFeedback, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::NotFeedback<libafl::feedbacks::TimeoutFeedback, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::MapFeedback<libafl::feedbacks::DifferentIsNovel, libafl::observers::HitcountsMapObserver<virtfuzz::observer::kcov_map_observer::KcovMapObserver<'a>>, libafl::feedbacks::MaxReducer, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>, u8>, libafl::feedbacks::CombinedFeedback<virtfuzz::feedback::const_metadata::ConstMetadataFeedback<virtfuzz::metadata::FuzzCampaignMetadata>, virtfuzz::feedback::coverage_statistic::CoverageStatisticFeedback<true>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::CrashFeedback, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::CombinedFeedback<virtfuzz::feedback::backtrace::UniqueBacktraceFeedback, libafl::feedbacks::MapFeedback<libafl::feedbacks::DifferentIsNovel, libafl::observers::HitcountsMapObserver<virtfuzz::observer::kcov_map_observer::KcovMapObserver<'a>>, libafl::feedbacks::MaxReducer, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>, u8>, libafl::feedbacks::LogicEagerOr, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<virtfuzz::feedback::const_metadata::ConstMetadataFeedback<virtfuzz::metadata::FuzzCampaignMetadata>, virtfuzz::feedback::executed_inputs::ExecutedInputsFeedback, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::CachedOnDiskCorpus<I>, libafl::prelude::RomuDuoJrRand, libafl::corpus::OnDiskCorpus<I>>>, (libafl::observers::HitcountsMapObserver<virtfuzz::observer::kcov_map_observer::KcovMapObserver<'a>>, (virtfuzz::observer::dmesg::DmesgObserver, ()))>>,
+            > + libafl::events::EventProcessor<virtfuzz::qemu::executor::StdQemuExecutor<libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>, (libafl::observers::HitcountsMapObserver<virtfuzz::observer::kcov_map_observer::KcovMapObserver<'a>>, (virtfuzz::observer::dmesg::DmesgObserver, ()))>, libafl::StdFuzzer<libafl::schedulers::RandScheduler<libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::NotFeedback<libafl::feedbacks::CrashFeedback, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::NotFeedback<libafl::feedbacks::TimeoutFeedback, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::MapFeedback<HitcountsMapObserver<KcovMapObserver<'a>>, libafl::feedbacks::DifferentIsNovel, libafl::observers::HitcountsMapObserver<virtfuzz::observer::kcov_map_observer::KcovMapObserver<'a>>, libafl::feedbacks::MaxReducer, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>, u8>, libafl::feedbacks::CombinedFeedback<virtfuzz::feedback::const_metadata::ConstMetadataFeedback<virtfuzz::metadata::FuzzCampaignMetadata>, virtfuzz::feedback::coverage_statistic::CoverageStatisticFeedback<true>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::CrashFeedback, libafl::feedbacks::CombinedFeedback<libafl::feedbacks::CombinedFeedback<virtfuzz::feedback::backtrace::UniqueBacktraceFeedback, libafl::feedbacks::MapFeedback<HitcountsMapObserver<KcovMapObserver<'a>>, libafl::feedbacks::DifferentIsNovel, libafl::observers::HitcountsMapObserver<virtfuzz::observer::kcov_map_observer::KcovMapObserver<'a>>, libafl::feedbacks::MaxReducer, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>, u8>, libafl::feedbacks::LogicEagerOr, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::CombinedFeedback<virtfuzz::feedback::const_metadata::ConstMetadataFeedback<virtfuzz::metadata::FuzzCampaignMetadata>, virtfuzz::feedback::executed_inputs::ExecutedInputsFeedback, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, libafl::feedbacks::LogicFastAnd, libafl::state::StdState<I, libafl::corpus::InMemoryOnDiskCorpus<I>, RomuDuoJrRand, libafl::corpus::CachedOnDiskCorpus<I>>>, (libafl::observers::HitcountsMapObserver<virtfuzz::observer::kcov_map_observer::KcovMapObserver<'a>>, (virtfuzz::observer::dmesg::DmesgObserver, ()))>>,
     {
         // Basic Setup
         let qemu = self.qemu.clone().new_id().run();
@@ -593,7 +593,7 @@ where
         let coverage_statistics =
             CoverageStatisticFeedback::<true>::new(String::from("covered_bbs"), &kcov_map);
         let map_observer = HitcountsMapObserver::new(kcov_map);
-        let map_feedback = MaxMapFeedback::new_tracking(&map_observer, true, false);
+        let map_feedback = MaxMapFeedback::new(&map_observer);
 
         #[cfg(feature = "minimizer")]
         let minimizer = StdCorpusMinimizer::new(&map_observer);
@@ -614,7 +614,7 @@ where
             coverage_statistics
         );
 
-        let map_feedback_obj = MaxMapFeedback::new_tracking(&map_observer, false, false);
+        let map_feedback_obj = MaxMapFeedback::new(&map_observer);
         let record_frames = ExecutedInputsFeedback::new(qemu.get_inputsref());
         // Dmesg Parser & BacktraceFeedback for unique crashes
         let dmesg_obs = DmesgObserver::new("dmesg_observer", qemu.get_logref());
@@ -630,8 +630,8 @@ where
         let mut state = state.unwrap_or_else(|| {
             StdState::new(
                 StdRand::with_seed(current_nanos()),
-                CachedOnDiskCorpus::new(self.cli.corpus.clone(), 1024).unwrap(),
-                OnDiskCorpus::new(self.cli.crashes.clone()).unwrap(),
+                InMemoryOnDiskCorpus::new(self.cli.corpus.clone()).unwrap(),
+                CachedOnDiskCorpus::new(self.cli.crashes.clone(), 4096).unwrap(),
                 &mut corpus_feedback,
                 &mut objective,
             )
@@ -643,10 +643,10 @@ where
             &mut state,
             Event::UpdateUserStats {
                 name: String::from("stages"),
-                value: UserStats::String(match self.cli.stages {
+                value: UserStats::new(UserStatsValue::String(match self.cli.stages {
                     Stages::Standard => String::from("standard"),
                     Stages::Cmplog => String::from("cmplog"),
-                }),
+                }), AggregatorOps::None),
                 phantom: Default::default(),
             },
         )
@@ -655,13 +655,13 @@ where
             &mut state,
             Event::UpdateUserStats {
                 name: String::from("device"),
-                value: UserStats::String(if let Some(device) = self.cli.device {
+                value: UserStats::new(UserStatsValue::String(if let Some(device) = self.cli.device {
                     device.to_string()
                 } else if let Some(path) = &self.cli.device_definition {
                     path.to_str().unwrap().to_string()
                 } else {
                     panic!("Either device_definition or device must be set")
-                }),
+                }), AggregatorOps::None),
                 phantom: Default::default(),
             },
         )
@@ -670,7 +670,7 @@ where
             &mut state,
             Event::UpdateUserStats {
                 name: String::from("kernel"),
-                value: UserStats::String(
+                value: UserStats::new(UserStatsValue::String(
                     self.cli
                         .kernel
                         .file_name()
@@ -678,7 +678,7 @@ where
                         .to_str()
                         .unwrap()
                         .to_string(),
-                ),
+                ), AggregatorOps::None),
                 phantom: Default::default(),
             },
         )

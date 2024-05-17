@@ -2,8 +2,8 @@ use core::marker::PhantomData;
 use core::result::Result;
 use core::result::Result::Ok;
 
-use libafl::bolts::rands::Rand;
-use libafl::bolts::tuples::{tuple_list, tuple_list_type, Named};
+use libafl_bolts::rands::Rand;
+use libafl_bolts::tuples::{tuple_list, tuple_list_type, Named};
 use libafl::inputs::{HasBytesVec, Input};
 use libafl::mutators::{MutationResult, Mutator, *};
 use libafl::state::{HasCorpus, HasMaxSize, HasRand};

@@ -2,9 +2,9 @@ use log::Level::Trace;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::io::{BufReader, ErrorKind, Read};
+use std::io::{Read};
 use std::net::Shutdown;
-use std::os::unix::net::{UnixListener, UnixStream};
+use std::os::unix::net::{UnixListener};
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::process::{Child, Command};
@@ -22,8 +22,6 @@ use netlink_packet_generic::GenlMessage;
 use nix::sched::{sched_setaffinity, CpuSet};
 use nix::unistd::Pid;
 use pcap::Capture;
-use qapi::{qmp, Qmp, Stream};
-use qapi_qmp::JobStatus;
 #[cfg(feature = "introspection")]
 use regex::Regex;
 use shared_memory::Shmem;
@@ -74,8 +72,6 @@ pub struct QemuSystemBuilder {
     kernel: PathBuf,
     kernel_cmds: Vec<String>,
 
-    snapshot: Option<String>,
-
     devices: Vec<String>,
 
     kcov: QemuKcovMode,
@@ -117,7 +113,6 @@ impl QemuSystemBuilder {
             backing_image: image.to_path_buf(),
             kernel: kernel.to_path_buf(),
             kernel_cmds: vec![],
-            snapshot: None,
             devices: vec![],
             kcov: QemuKcovMode::None(None),
             cpus: 1,
@@ -202,11 +197,6 @@ impl QemuSystemBuilder {
         self
     }
 
-    pub fn snapshot(mut self, snapshot_name: &str) -> Self {
-        self.snapshot = Some(snapshot_name.to_string());
-        self
-    }
-
     pub fn add_kernel_param(mut self, param: &str) -> Self {
         self.kernel_cmds.push(param.to_string());
         self
@@ -268,10 +258,6 @@ pub struct StdQemuSystem {
     process_start: Instant,
     logging: bool,
     args: Vec<String>,
-    snapshot: Option<String>,
-
-    qmp: Qmp<Stream<BufReader<UnixStream>, UnixStream>>,
-    qmp_job_id: u64,
 
     use_fake_init: bool,
     fake_init_pcap: PathBuf,
@@ -367,15 +353,7 @@ impl StdQemuSystem {
             format!("Fuzz{},debug-threads=on", builder.id),
         ]);
 
-        if builder.snapshot.is_some() {
-            std::fs::copy(builder.backing_image, format!("/tmp/{}.qcow2", builder.id))
-                .expect("Can't copy image");
-            builder.backing_image = PathBuf::from(format!("/tmp/{}.qcow2", builder.id));
-        }
-
-        if builder.snapshot.is_none() {
-            args.push("-snapshot".to_string());
-        }
+        args.push("-snapshot".to_string());
 
         args.push("-drive".to_string());
         args.push(format!(
@@ -486,14 +464,10 @@ impl StdQemuSystem {
             }
         }
 
-        args.push("-monitor".to_string());
-        args.push(format!("unix:/tmp/qmp{}.sock,server,nowait", builder.id));
-
-        let (mut process, qmp) = Self::create_process(
+        let mut process = Self::create_process(
             &builder.executable,
             &args,
             builder.log_qemu,
-            builder.id,
             builder.bind_to,
         );
         trace!("Process created with PID {}", process.id());
@@ -526,8 +500,7 @@ impl StdQemuSystem {
             virtbt_conn.set_nonblocking(true).expect("Unable to set VirtIO connection to non-blocking, which is required to check for cmd complete events");
         }
 
-        let mut system = Self {
-            snapshot: builder.snapshot,
+        Self {
             args,
             id: builder.id,
             executable: builder.executable,
@@ -535,8 +508,6 @@ impl StdQemuSystem {
             process_start,
             process_affinity: builder.bind_to,
             logging: builder.log_qemu,
-            qmp,
-            qmp_job_id: 0,
             use_fake_init: builder.with_init,
             virtbt_sock: vbt_socket,
             virtbt_conn,
@@ -555,15 +526,7 @@ impl StdQemuSystem {
             only_ready_on_rx: builder.wait_for_frame,
             target_device: builder.target_device,
             fake_bt_cc: builder.bt_fake_cmd_complete
-        };
-
-        if system.snapshot.is_some() {
-            system
-                .revert_to_snapshot()
-                .expect("Can't revert to snapshot");
         }
-
-        system
     }
 
     pub fn get_virtio_id(&self) -> u8 {
@@ -574,13 +537,8 @@ impl StdQemuSystem {
         executable: &Path,
         args: &[String],
         log_qemu: bool,
-        id: u32,
         bind_to: Option<usize>,
-    ) -> (Child, Qmp<Stream<BufReader<UnixStream>, UnixStream>>) {
-        let qmp_path = PathBuf::from(format!("/tmp/qmp{}.sock", id));
-        if qmp_path.exists() {
-            std::fs::remove_file(qmp_path.as_path()).expect("Can't remove qmp_path");
-        }
+    ) -> Child {
 
         let mut log_stdout = Stdio::null(); //piped();
         let mut log_stderr = Stdio::null(); //piped();
@@ -612,50 +570,22 @@ impl StdQemuSystem {
                 .expect("Unable to set process affinity");
         }
 
-        while !qmp_path.exists() {
-            let ret = process.try_wait().unwrap();
-            if ret.is_some() {
-                error!("QEMU did not start");
-                if !log_qemu {
-                    let mut qemu_log = String::new();
-                    if let Some(mut stderr) = process.stderr.take() {
-                        stderr
-                            .read_to_string(&mut qemu_log)
-                            .expect("Can't unwrap QEMU log after startup error");
-                    }
-                    eprintln!("{}", qemu_log);
+        let ret = process.try_wait().unwrap();
+        if ret.is_some() {
+            error!("QEMU did not start");
+            if !log_qemu {
+                let mut qemu_log = String::new();
+                if let Some(mut stderr) = process.stderr.take() {
+                    stderr
+                        .read_to_string(&mut qemu_log)
+                        .expect("Can't unwrap QEMU log after startup error");
                 }
-                panic!("QEMU did not start: {}", ret.unwrap())
+                eprintln!("{}", qemu_log);
             }
-            sleep(Duration::from_millis(1));
-            trace!("QMP Socket does not yet exist");
+            panic!("QEMU did not start: {}", ret.unwrap())
         }
 
-        let qmp_stream: UnixStream;
-        'outer: loop {
-            sleep(Duration::from_millis(10));
-            trace!("Connecting to QMP Socket...");
-            match UnixStream::connect(qmp_path.as_path()) {
-                Ok(stream) => {
-                    qmp_stream = stream;
-                    trace!("Connected to QMP socket");
-                    break 'outer;
-                }
-                Err(err) if err.kind() == ErrorKind::ConnectionRefused => {}
-                Err(err) => {
-                    panic!("Could not connect to QMP Stream: {}", err)
-                }
-            }
-        }
-
-        let qmp = Qmp::new(Stream::new(
-            BufReader::new(qmp_stream.try_clone().unwrap()),
-            qmp_stream,
-        ));
-        trace!("Created QMP");
-        //qmp.handshake().expect("QMP handshake failed");
-
-        (process, qmp)
+        process
     }
 
     /*fn next_dmesg_line(&mut self) -> Option<String> {
@@ -710,99 +640,6 @@ impl StdQemuSystem {
         self.run_crashed.clone()
     }
 
-    fn revert_to_snapshot(&mut self) -> Result<bool, errors::SnapshotRestoreError> {
-        if self.snapshot.is_none() {
-            return Err(errors::SnapshotRestoreError {
-                message: Some("No snapshot defined".to_string()),
-            });
-        }
-        let snapshot_name = self.snapshot.clone().unwrap();
-        self.qmp_job_id += 1;
-        self.qmp
-            .execute(&qmp::snapshot_load {
-                job_id: format!("revertsnapshot{}", self.qmp_job_id),
-                tag: snapshot_name.clone(),
-                devices: [String::from("disk0")].to_vec(),
-                vmstate: String::from("disk0"),
-            })
-            .unwrap_or_else(|_| panic!("Can't revert to snapshot {}", snapshot_name));
-        info!("Start revert to snapshot");
-        if !(self.check_snapshot_exists().unwrap()) {
-            panic!("Snapshot {} does not exist", snapshot_name);
-        }
-
-        'outer: loop {
-            for event in self.qmp.events() {
-                if let qapi_qmp::Event::JOB_STATUS_CHANGE { data, timestamp: _ } = event {
-                    if data.id == format!("revertsnapshot{}", self.qmp_job_id) {
-                        if data.status == JobStatus::aborting {
-                            break 'outer;
-                        } else if data.status == JobStatus::concluded {
-                            info!("Restored snapshot");
-                            return Ok(true);
-                        }
-                    }
-                };
-            }
-
-            sleep(Duration::from_secs(1));
-        }
-        let mut err_message: Option<String> = None;
-        for job in self
-            .qmp
-            .execute(&qmp::query_jobs {})
-            .expect("Could not query for jobs")
-        {
-            if job.id == "revertsnapshot" && job.error.is_some() {
-                err_message = job.error;
-            }
-        }
-        Err(errors::SnapshotRestoreError {
-            message: err_message,
-        })
-    }
-
-    fn check_snapshot_exists(&mut self) -> Result<bool, errors::SnapshotRestoreError> {
-        if self.snapshot.is_none() {
-            return Err(errors::SnapshotRestoreError {
-                message: Some("No snapshot defined".to_string()),
-            });
-        }
-        let snapshot_name = self.snapshot.clone().unwrap();
-
-        let block_info: Vec<qmp::BlockInfo> = self
-            .qmp
-            .execute(&qmp::query_block {})
-            .expect("Could not query snapshots");
-        debug!("Query Snapshots...");
-        for info in block_info {
-            if info.inserted.is_some() {
-                let inserted = info.inserted.unwrap();
-                if inserted.image.backing_image.is_some() {
-                    let backing = inserted.image.backing_image.unwrap();
-                    if backing.snapshots.is_some() {
-                        for snapshot in backing.snapshots.unwrap() {
-                            debug!("Got snapshot {}", snapshot.name);
-                            if snapshot_name == snapshot.name {
-                                return Ok(true);
-                            }
-                        }
-                    }
-                }
-
-                if inserted.image.snapshots.is_some() {
-                    for snapshot in inserted.image.snapshots.unwrap() {
-                        debug!("Got snapshot {}", snapshot.name);
-                        if snapshot_name == snapshot.name {
-                            return Ok(true);
-                        }
-                    }
-                }
-            }
-        }
-        Ok(false)
-    }
-
     fn flush_dmesg(&mut self) {
         for line in self.dmesg_reader.by_ref() {
             let crash = utils::is_crashlog(&line);
@@ -817,11 +654,6 @@ impl StdQemuSystem {
         self.virtbt_conn
             .shutdown(Shutdown::Both)
             .expect("Can't shutdown virtbt connection");
-        self.qmp
-            .inner_mut()
-            .get_mut_write()
-            .shutdown(Shutdown::Both)
-            .expect("Can't shutdown QMP Socket");
 
         if let Ok(None) = self.process.try_wait() {
             self.process.kill().expect("Can't kill QEMU process");
@@ -907,11 +739,7 @@ impl StdQemuSystem {
     pub fn rx_blocking(&mut self) -> Vec<u8> {
         let mut buffer = [0_u8; 1 << 13];
 
-        if let Ok((size, truncated)) = self.virtbt_conn.recv(&mut buffer) {
-            if truncated {
-                error!("Received frame does not fit into buffer!");
-            }
-
+        if let Ok(size) = self.virtbt_conn.recv(&mut buffer) {
             return Vec::from(&buffer[0..size]);
         }
 
@@ -931,11 +759,7 @@ impl StdQemuSystem {
         let mut buffer = [0_u8; 1 << 13];
         let mut result = vec![];
 
-        while let Ok((size, truncated)) = self.virtbt_conn.recv(&mut buffer) {
-            if truncated {
-                error!("Received frame does not fit into buffer!");
-            }
-
+        while let Ok(size) = self.virtbt_conn.recv(&mut buffer) {
             result.push(buffer[0..size].to_vec());
         }
 
@@ -956,10 +780,6 @@ impl StdQemuSystem {
         let ret = self.process.try_wait().unwrap();
         if ret.is_some() {
             panic!("QEMU stopped: {}", ret.unwrap());
-        }
-
-        if self.snapshot.is_some() {
-            return Ok(true);
         }
 
         if self.ready == SystemReadyState::DeviceReady {
@@ -1275,49 +1095,38 @@ impl QemuSystem for StdQemuSystem {
             }
         }
 
-        if self.snapshot.is_none() {
-            /* Todo: Maybe delete & re-add device, instead of reloading the complete machine */
-            self.qmp
-                .inner_mut()
-                .get_mut_write()
-                .shutdown(Shutdown::Both)
-                .expect("Can't shutdown QMP Socket");
-            self.process.kill().expect("Can't kill QEMU");
-            self.process.wait().expect("Can't wait for QEMU to stop");
+        /* Todo: Maybe delete & re-add device, instead of reloading the complete machine */
+        self.process.kill().expect("Can't kill QEMU");
+        self.process.wait().expect("Can't wait for QEMU to stop");
 
-            let (process, qmp) = Self::create_process(
-                &self.executable,
-                &self.args,
-                force_log,
-                self.id,
-                self.process_affinity,
-            );
-            self.process = process;
-            self.process_start = Instant::now();
-            self.qmp = qmp;
+        let process = Self::create_process(
+            &self.executable,
+            &self.args,
+            force_log,
+            self.process_affinity,
+        );
+        self.process = process;
+        self.process_start = Instant::now();
 
-            let (vbt_conn, _) = self
-                .virtbt_sock
-                .accept_unix_addr()
-                .expect("Could not accept VBT connection");
-            let (dmesg_conn, _) = self
-                .dmesg_sock
-                .accept()
-                .expect("Could not accept DMESG connection");
-            dmesg_conn
-                .set_read_timeout(DMESG_READ_TIMEOUT)
-                .expect("Can't set DMESG Socket to non-blocking");
+        let (vbt_conn, _) = self
+            .virtbt_sock
+            .accept_unix_addr()
+            .expect("Could not accept VBT connection");
+        let (dmesg_conn, _) = self
+            .dmesg_sock
+            .accept()
+            .expect("Could not accept DMESG connection");
+        dmesg_conn
+            .set_read_timeout(DMESG_READ_TIMEOUT)
+            .expect("Can't set DMESG Socket to non-blocking");
 
-            self.virtbt_conn = vbt_conn;
-            self.dmesg_reader = DmesgReader::from(dmesg_conn);
-            self.ready = match self.kcov {
-                QemuKcovMode::None(_) => SystemReadyState::CoverageReady,
-                _ => SystemReadyState::Initializing,
-            };
-            self.run_crashed = Crashtype::None;
-        } else {
-            self.revert_to_snapshot().expect("Can't revert to snapshot");
-        }
+        self.virtbt_conn = vbt_conn;
+        self.dmesg_reader = DmesgReader::from(dmesg_conn);
+        self.ready = match self.kcov {
+            QemuKcovMode::None(_) => SystemReadyState::CoverageReady,
+            _ => SystemReadyState::Initializing,
+        };
+        self.run_crashed = Crashtype::None;
 
         if self.fake_bt_cc {
             self.virtbt_conn.set_nonblocking(true).expect("Unable to set VirtIO BT to nonblocking");

@@ -1,7 +1,7 @@
 use std::hash::{Hash, Hasher};
 
 use ahash::AHasher;
-use libafl::bolts::HasLen;
+use libafl_bolts::HasLen;
 use libafl::inputs::bytes::BytesInput;
 use libafl::inputs::Input;
 use serde::{Deserialize, Serialize};
@@ -39,7 +39,7 @@ where
     I: Input,
 {
     fn generate_name(&self, idx: usize) -> String {
-        let mut hasher = AHasher::new_with_keys(0, 0);
+        let mut hasher = AHasher::default();
         if self.inputs.is_empty() {
             return "0000000000000000".to_string();
         }

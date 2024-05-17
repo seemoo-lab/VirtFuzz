@@ -1,15 +1,16 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use libafl::bolts::tuples::Named;
+use libafl_bolts::Named;
 use libafl::corpus::Testcase;
 use libafl::events::EventFirer;
 use libafl::feedbacks::Feedback;
 
 use libafl::observers::ObserversTuple;
 use libafl::prelude::UsesInput;
-use libafl::state::{HasClientPerfMonitor, HasMetadata};
-use libafl::{impl_serdeany, Error};
+use libafl::common::{HasMetadata};
+use libafl::{Error};
+use libafl_bolts::impl_serdeany;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
@@ -31,7 +32,7 @@ impl Named for ExecutedInputsFeedback {
 
 impl<S> Feedback<S> for ExecutedInputsFeedback
 where
-    S: UsesInput + HasClientPerfMonitor,
+    S: UsesInput + libafl::state::State,
 {
     fn is_interesting<EM, OT>(
         &mut self,
@@ -48,11 +49,14 @@ where
         Ok(true)
     }
 
-    fn append_metadata(
+    fn append_metadata<EM, OT>(
         &mut self,
         _state: &mut S,
+        _: &mut EM,
+        _observers: &OT,
         testcase: &mut Testcase<<S as UsesInput>::Input>,
-    ) -> Result<(), Error> {
+    )  -> Result<(), Error>
+        where EM: EventFirer<State = S>, OT: ObserversTuple<S>, {
         testcase.add_metadata(ExecutedInputsMetadata {
             previous_frames: self.inputs.borrow().clone(),
         });

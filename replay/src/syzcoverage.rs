@@ -2,7 +2,8 @@
 
 use crate::syzcoverage::HCIPktType::{Command, Event, Vendor};
 use kcovreader::DynamicKcov;
-use libafl::prelude::{AsSlice, ExitKind, HasTargetBytes, Input};
+use libafl::prelude::{ExitKind, HasTargetBytes, Input};
+use libafl_bolts::AsSlice;
 use log::{debug, info, trace};
 use netlink_packet_utils::byteorder::{ByteOrder, LittleEndian};
 use std::thread::sleep;

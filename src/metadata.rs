@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::path::PathBuf;
 
 use crate::qemu::device_config::DeviceConfiguration;
-use libafl::impl_serdeany;
+use libafl_bolts::impl_serdeany;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

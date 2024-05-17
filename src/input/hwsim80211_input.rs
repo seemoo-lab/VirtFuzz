@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 use crate::netlink_hwsim::{GenlHwsim, GenlHwsimAttrs, GenlHwsimCmd};
 use ahash::AHasher;
-use libafl::bolts::HasLen;
-use libafl::prelude::{Generator, HasBytesVec, HasTargetBytes, Input, OwnedSlice, State};
-use libafl::{Error, ErrorBacktrace};
+use libafl_bolts::{Error, HasLen};
+use libafl::prelude::{Generator, HasBytesVec, HasTargetBytes, Input, State};
+use libafl_bolts::{ErrorBacktrace, prelude::OwnedSlice};
 use netlink_packet_core::{NetlinkMessage, NetlinkPayload};
 use netlink_packet_generic::GenlMessage;
 use netlink_packet_utils::byteorder::{ByteOrder, LittleEndian};
@@ -104,7 +104,7 @@ impl Input for Hwsim80211Input {
     {
         match std::fs::write(path, self.as_nl_msg()) {
             Ok(_) => Ok(()),
-            Err(e) => Err(Error::File(e, ErrorBacktrace::new())),
+            Err(e) => Err(Error::OsError(e, String::new(), ErrorBacktrace::new())),
         }
     }
 
@@ -132,12 +132,12 @@ impl Input for Hwsim80211Input {
                     )))},
                 }
             }
-            Err(e) => Err(Error::File(e, ErrorBacktrace::new())),
+            Err(e) => Err(Error::OsError(e, String::new(), ErrorBacktrace::new())),
         }
     }
 
     fn generate_name(&self, _idx: usize) -> String {
-        let mut hasher = AHasher::new_with_keys(0, 0);
+        let mut hasher = AHasher::default();
         hasher.write(self.bytes());
         format!("{:016x}", hasher.finish())
     }
@@ -198,9 +198,5 @@ where
     fn generate(&mut self, state: &mut S) -> Result<Hwsim80211Input, Error> {
         let mut bytes = self.inner.generate(state)?;
         Ok(Hwsim80211Input::new(bytes.bytes_mut().to_vec()))
-    }
-
-    fn generate_dummy(&self, _state: &mut S) -> Hwsim80211Input {
-        Hwsim80211Input::new(vec![0_u8; 28])
     }
 }

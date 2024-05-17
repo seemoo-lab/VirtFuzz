@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 use core::result::Result;
 use core::result::Result::Ok;
 
-use libafl::bolts::rands::Rand;
+use libafl_bolts::rands::Rand;
 use libafl::generators::Generator;
 use libafl::inputs::Input;
 use libafl::state::HasRand;

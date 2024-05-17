@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use std::io;
 
-use libafl::bolts::tuples::Named;
+use libafl_bolts::Named;
 use libafl::executors::ExitKind;
 use libafl::observers::Observer;
 use libafl::prelude::{UsesInput};

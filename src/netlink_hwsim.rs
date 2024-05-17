@@ -67,16 +67,16 @@ impl GenlFamily for GenlHwsim {
         "MAC80211_HWSIM"
     }
 
+    fn family_id(&self) -> u16 {
+        0x1b
+    }
+
     fn command(&self) -> u8 {
         self.cmd.into()
     }
 
     fn version(&self) -> u8 {
         1
-    }
-
-    fn family_id(&self) -> u16 {
-        0x1b
     }
 }
 

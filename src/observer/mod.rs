@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::io;
 
-use libafl::bolts::tuples::Named;
+use libafl_bolts::Named;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 

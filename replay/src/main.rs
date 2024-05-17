@@ -7,6 +7,7 @@ mod syzcoverage;
 
 extern crate core;
 
+use libafl_bolts::prelude::Cores;
 use crate::error::ReplayError;
 use crate::manager::{Manager, ManagerJobs};
 use crate::metadata::ReplayMetadata;
@@ -16,7 +17,7 @@ use log::{info, warn, Level};
 use simplelog::{ColorChoice, Config, TermLogger, TerminalMode};
 
 use crate::utils::bz2vm;
-use libafl::prelude::{BytesInput, Cores};
+use libafl::prelude::{BytesInput};
 use std::path::PathBuf;
 use std::process::exit;
 use virtfuzz::input::hwsim80211_input::Hwsim80211Input;

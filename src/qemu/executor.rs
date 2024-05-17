@@ -1,4 +1,4 @@
-use libafl::bolts::tuples::Named;
+use libafl_bolts::Named;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::time::Duration;
@@ -11,7 +11,8 @@ use libafl::events::EventFirer;
 use libafl::executors::{Executor, ExitKind, HasObservers};
 use libafl::inputs::UsesInput;
 use libafl::observers::{ObserversTuple, UsesObservers};
-use libafl::prelude::{AsSlice, HasClientPerfMonitor, HasTargetBytes, UsesState};
+use libafl::prelude::{HasExecutions, HasTargetBytes, State, UsesState};
+use libafl_bolts::AsSlice;
 #[cfg(feature = "introspection")]
 use libafl::prelude::{Event, PerfFeature, UserStats};
 use libafl::{mark_feature_time, start_timer, Error};
@@ -49,7 +50,7 @@ impl QemuExecutorStats {
     pub fn inc_timeouts<S, EM>(&mut self, state: &mut S, mgr: &mut EM)
     where
         EM: EventFirer + UsesState<State = S>,
-        S: Debug + UsesInput + HasClientPerfMonitor,
+        S: Debug + UsesInput,
     {
         self.timeouts += 1;
 
@@ -67,7 +68,7 @@ impl QemuExecutorStats {
     pub fn inc_restarts<S, EM>(&mut self, state: &mut S, mgr: &mut EM)
     where
         EM: EventFirer + UsesState<State = S>,
-        S: Debug + UsesInput + HasClientPerfMonitor,
+        S: Debug + UsesInput,
     {
         self.restarts += 1;
 
@@ -85,7 +86,7 @@ impl QemuExecutorStats {
     pub fn inc_crashes<S, EM>(&mut self, state: &mut S, mgr: &mut EM)
     where
         EM: EventFirer + UsesState<State = S>,
-        S: Debug + UsesInput + HasClientPerfMonitor,
+        S: Debug + UsesInput,
     {
         self.crashes += 1;
 
@@ -108,7 +109,7 @@ impl QemuExecutorStats {
     pub fn finish_exec<S, EM>(&mut self, state: &mut S, mgr: &mut EM)
     where
         EM: EventFirer + UsesState<State = S>,
-        S: Debug + UsesInput + HasClientPerfMonitor,
+        S: Debug + UsesInput,
     {
         self.exec_time += self.timer.elapsed();
         self.execs += 1;
@@ -172,7 +173,7 @@ where
     OT: ObserversTuple<S>,
     Z: UsesState<State = S>,
     EM: EventFirer + UsesState<State = S>,
-    S: Debug + UsesInput + HasClientPerfMonitor,
+    S: Debug + UsesInput + State + HasExecutions,
     S::Input: HasTargetBytes,
 {
     fn run_target(
@@ -251,6 +252,8 @@ where
         #[cfg(feature = "introspection")]
         self.stats.finish_exec(state, mgr);
 
+        *state.executions_mut() += 1;
+
         if ret == ExitKind::Timeout {
             self.timeouts += 1;
             if self.timeouts > self.max_tolerated_timeouts {
@@ -291,7 +294,7 @@ impl<OT, S> HasObservers for StdQemuExecutor<S, OT>
 where
     OT: ObserversTuple<S>,
     OT: ObserversTuple<S>,
-    S: UsesInput,
+    S: UsesInput + State,
 {
     fn observers(&self) -> &OT {
         &self.observers
@@ -305,7 +308,7 @@ where
 impl<OT, S> UsesObservers for StdQemuExecutor<S, OT>
 where
     OT: ObserversTuple<S>,
-    S: UsesInput,
+    S: UsesInput + State,
 {
     type Observers = OT;
 }
@@ -313,7 +316,7 @@ where
 impl<OT, S> UsesState for StdQemuExecutor<S, OT>
 where
     OT: ObserversTuple<S>,
-    S: UsesInput,
+    S: UsesInput + libafl::state::State,
 {
     type State = S;
 }
