@@ -192,6 +192,9 @@ enum Device {
     WifiSyzkaller,
     Console,
     Input,
+    Mem,
+    Balloon,
+    Rng,
 }
 
 impl Display for Device {
@@ -295,6 +298,9 @@ fn main() {
             Device::WifiAP => DeviceConfiguration::new_hwsim80211_device_ap(),
             Device::WifiIBSS => DeviceConfiguration::new_hwsim80211_device_ibss(),
             Device::WifiSyzkaller => DeviceConfiguration::new_hwsim80211_device_syzkaller(),
+            Device::Mem => DeviceConfiguration::new_mem_device(),
+            Device::Balloon => DeviceConfiguration::new_balloon_device(),
+            Device::Rng => DeviceConfiguration::new_rng_device(),
         }
     } else if let Some(definition) = &cli.device_definition {
         if !definition.exists() {
