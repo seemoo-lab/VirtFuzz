@@ -230,6 +230,54 @@ impl DeviceConfiguration {
         }
     }
 
+    pub fn new_mem_device() -> Self {
+        Self {
+            virtio_id: 24,
+            virtqueue_num: 1,
+            virtqueue_tx: Some(0),
+            virtqueue_rx: None,
+            features: vec![],
+            config: as_u8(VirtIOMemConfig {
+                block_size: 0x200000_u64.to_le(), // 2MiB, power-of-two aligned
+                node_id: 0,
+                padding: [0; 6],
+                addr: 0x100000000_u64.to_le(), // 4GiB physical base
+                region_size: 0x10000000_u64.to_le(), // 256MiB
+                usable_region_size: 0x10000000_u64.to_le(),
+                plugged_size: 0,
+                requested_size: 0x10000000_u64.to_le(),
+            }),
+            command_line_params: None,
+        }
+    }
+
+    pub fn new_balloon_device() -> Self {
+        Self {
+            virtio_id: 5,
+            virtqueue_num: 2,
+            virtqueue_tx: Some(0),
+            virtqueue_rx: Some(1),
+            features: vec![],
+            config: as_u8(VirtIOBalloonConfig {
+                num_pages: 0,
+                actual: 0,
+            }),
+            command_line_params: None,
+        }
+    }
+
+    pub fn new_rng_device() -> Self {
+        Self {
+            virtio_id: 4,
+            virtqueue_num: 1,
+            virtqueue_tx: None,
+            virtqueue_rx: Some(0),
+            features: vec![],
+            config: as_u8(VirtIORngConfig {}),
+            command_line_params: None,
+        }
+    }
+
     pub fn new_scsi_device() -> Self {
         Self {
             virtio_id: 2,
@@ -293,4 +341,43 @@ pub struct VirtIO80211Config {
 #[repr(C)]
 pub struct VirtIOBlkConfig {
     capacity: i64,
+}
+
+#[repr(C)]
+pub struct VirtIOMemConfig {
+    block_size: u64,
+    node_id: u16,
+    padding: [u8; 6],
+    addr: u64,
+    region_size: u64,
+    usable_region_size: u64,
+    plugged_size: u64,
+    requested_size: u64,
+}
+
+#[repr(C)]
+pub struct VirtIOBalloonConfig {
+    num_pages: u32,
+    actual: u32,
+}
+
+#[repr(C)]
+pub struct VirtIORngConfig {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::mem;
+
+    #[test]
+    fn virtio_mem_config_size() {
+        // virtio spec: struct virtio_mem_config is 56 bytes; wrong size
+        // silently misaligns every fuzzed config field.
+        assert_eq!(mem::size_of::<VirtIOMemConfig>(), 56);
+    }
+
+    #[test]
+    fn virtio_balloon_config_size() {
+        assert_eq!(mem::size_of::<VirtIOBalloonConfig>(), 8);
+    }
 }
